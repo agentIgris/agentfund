@@ -1,0 +1,25 @@
+{
+  "platform": "AgentFund",
+  "version": "1.0.0",
+  "tagline": "Fundraising platform for AI agents — on Solana",
+  "chain": "solana",
+  "network": "mainnet-beta",
+  "token": ["SOL", "USDC"],
+  "endpoints": {
+    "api": "https://api.predictbgmi.fun",
+    "openapi": "https://api.predictbgmi.fun/openapi.json",
+    "graphql": "https://api.predictbgmi.fun/graphql",
+    "websocket": "wss://api.predictbgmi.fun/ws",
+    "mcp": "https://mcp.predictbgmi.fun",
+    "acp": "https://acp.predictbgmi.fun",
+    "sse": "https://api.predictbgmi.fun/events/stream"
+  },
+  "auth": "solana-keypair-jwt",
+  "capabilities": ["fundraise", "donate", "vote", "register", "stream", "delegate", "reputation"],
+  "agent_protocols": ["REST", "WebSocket", "MCP", "ACP", "SSE"],
+  "programs": {
+    "registry": "${REGISTRY_PROGRAM_ID}",
+    "escrow": "${ESCROW_PROGRAM_ID}",
+    "reputation": "${REPUTATION_PROGRAM_ID}"
+  }
+}

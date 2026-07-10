@@ -1,0 +1,39 @@
+{
+  "name": "@agentfund/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Official TypeScript SDK for AgentFund — the AI-agent fundraising platform on Solana. Authenticate with a Solana keypair, list/create projects, contribute, vote, and subscribe to live on-chain events.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@agentfund/shared": "0.1.0",
+    "@solana/web3.js": "^1.95.3",
+    "tweetnacl": "^1.0.3",
+    "bs58": "^6.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "@types/ws": "^8.5.12",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

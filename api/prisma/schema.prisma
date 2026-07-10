@@ -1,0 +1,169 @@
+// AgentFund API — Prisma schema.
+// Mirrors the on-chain PDA layouts + shared/src/types.ts. This is the
+// off-chain read model populated by services/indexer.ts from Helius
+// webhook events (services/helius.ts) — never written to directly by
+// user-facing routes except for WebhookRegistration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  Active
+  Funded
+  Failed
+  Complete
+}
+
+/// Mirrors on-chain AgentAccount PDA (agent_registry program).
+model Agent {
+  /// Wallet pubkey (base58) — also the on-chain PDA seed + identity.
+  owner             String   @id
+  metadataUri       String
+  reputationScore   BigInt   @default(0)
+  projectsCreated   Int      @default(0)
+  totalContributed  BigInt   @default(0)
+  bump              Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  projects      Project[]      @relation("ProjectCreator")
+  contributions Contribution[] @relation("ContributionByWallet")
+  votes         Vote[]         @relation("VoteByWallet")
+
+  @@index([reputationScore])
+}
+
+/// Mirrors on-chain ProjectAccount PDA, enriched with IPFS metadata.
+model Project {
+  /// Project PDA pubkey (base58) — canonical project id.
+  id             String        @id
+  creator        String
+  creatorAgent   Agent         @relation("ProjectCreator", fields: [creator], references: [owner])
+  /// Creator's project sequence number at creation time — needed to
+  /// re-derive the PROJECT PDA (seeds: ["project", creator, index_le]).
+  projectIndex   Int
+  ipfsHash       String
+  title          String
+  description    String
+  image          String?
+  category       String?
+  goalAmount     BigInt
+  tokenMint      String
+  raisedAmount   BigInt        @default(0)
+  /// Unix seconds.
+  deadline       BigInt
+  status         ProjectStatus @default(Active)
+  milestoneCount Int
+  bump           Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  milestones    Milestone[]
+  contributions Contribution[]
+  votes         Vote[]
+
+  @@index([status])
+  @@index([tokenMint])
+  @@index([creator])
+}
+
+/// Mirrors an on-chain milestone entry (escrow program governs release).
+model Milestone {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  index       Int
+  description String   @default("")
+  amount      BigInt
+  released    Boolean  @default(false)
+  votesFor    Int      @default(0)
+  votesAgainst Int     @default(0)
+  releaseSig  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, index])
+  @@index([projectId])
+}
+
+/// Mirrors on-chain ContributionAccount PDA (escrow program).
+model Contribution {
+  id          String   @id @default(cuid())
+  contributor String
+  wallet      Agent?   @relation("ContributionByWallet", fields: [contributor], references: [owner])
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  amount      BigInt
+  timestamp   DateTime
+  bump        Int      @default(0)
+  /// Solana tx signature of the contribute instruction.
+  sig         String?  @unique
+  createdAt   DateTime @default(now())
+
+  @@index([contributor])
+  @@index([projectId])
+}
+
+/// Mirrors on-chain VoteAccount PDA (escrow program).
+model Vote {
+  id             String   @id @default(cuid())
+  voter          String
+  wallet         Agent?   @relation("VoteByWallet", fields: [voter], references: [owner])
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  milestoneIndex Int
+  support        Boolean
+  weight         BigInt   @default(0)
+  timestamp      DateTime
+  bump           Int      @default(0)
+  sig            String?
+  createdAt      DateTime @default(now())
+
+  @@unique([voter, projectId, milestoneIndex])
+  @@index([projectId])
+  @@index([voter])
+}
+
+/// Agent-registered webhook callback (spec: POST /webhooks). Delivery is
+/// fanned out through a BullMQ queue (services + routes/webhooks.ts) with
+/// an HMAC signature header.
+model WebhookRegistration {
+  id          String   @id @default(cuid())
+  /// Owning agent wallet (from the authenticated JWT).
+  agentWallet String
+  url         String
+  /// Per-registration HMAC secret (falls back to WEBHOOK_SIGNING_SECRET
+  /// env if not supplied at registration time).
+  secret      String
+  /// Channels this webhook should receive, same vocabulary as WsChannel
+  /// (e.g. "projects", "contributions", "votes", "project:<id>").
+  events      String[]
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([agentWallet])
+}
+
+/// Raw record of every parsed Helius webhook event, for audit/replay and
+/// idempotency (dedupe on signature + eventName before indexing).
+model IndexedEvent {
+  id          String   @id @default(cuid())
+  /// "agent_registry" | "escrow" | "reputation"
+  program     String
+  eventName   String
+  signature   String
+  slot        BigInt
+  payload     Json
+  processedAt DateTime @default(now())
+
+  @@unique([signature, eventName])
+  @@index([program])
+  @@index([signature])
+}

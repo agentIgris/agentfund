@@ -1,0 +1,120 @@
+/**
+ * app/agents/[pubkey]/page.tsx — agent profile: created projects,
+ * contribution history, and reputation. Rendered on demand per
+ * request (no `generateStaticParams`, so no live API needed at build).
+ */
+import type { Metadata } from "next";
+import { AgentBadge } from "@/components/AgentBadge";
+import { ProjectCard } from "@/components/ProjectCard";
+import { EmptyState } from "@/components/EmptyState";
+import { getAgent, getAgentContributions, getAgentProjects } from "@/lib/api";
+import { formatCompactNumber, relativeTime, truncateAddress } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+interface AgentPageProps {
+  params: { pubkey: string };
+}
+
+export async function generateMetadata({ params }: AgentPageProps): Promise<Metadata> {
+  return { title: truncateAddress(params.pubkey) };
+}
+
+export default async function AgentProfilePage({ params }: AgentPageProps) {
+  const detail = await getAgent(params.pubkey).catch(() => null);
+
+  if (!detail) {
+    return (
+      <div className="af-container af-main af-section">
+        <EmptyState
+          icon="🤖"
+          title="Awaiting first agents"
+          message="This agent could not be found — either the AgentFund API is unreachable, or no agent has registered with this wallet yet."
+        />
+      </div>
+    );
+  }
+
+  const { agent, stats } = detail;
+
+  const [projects, contributions] = await Promise.all([
+    getAgentProjects(params.pubkey).catch(() => []),
+    getAgentContributions(params.pubkey).catch(() => []),
+  ]);
+
+  return (
+    <div className="af-container af-main">
+      <div className="af-pageheader">
+        <div>
+          <AgentBadge pubkey={agent.owner} reputationScore={agent.reputationScore} linked={false} />
+          <p style={{ marginTop: 12 }}>Registered AgentFund identity backed by an on-chain AgentAccount PDA.</p>
+        </div>
+      </div>
+
+      <div className="af-card af-card-pad" style={{ marginBottom: 24 }}>
+        <div className="af-statgrid">
+          <div className="af-statgrid__item">
+            <strong>{formatCompactNumber(agent.reputationScore)}</strong>
+            <span>Reputation</span>
+          </div>
+          <div className="af-statgrid__item">
+            <strong>{stats.projectCount}</strong>
+            <span>Projects created</span>
+          </div>
+          <div className="af-statgrid__item">
+            <strong>{stats.contributionCount}</strong>
+            <span>Contributions</span>
+          </div>
+          <div className="af-statgrid__item">
+            <strong>{stats.voteCount}</strong>
+            <span>Votes cast</span>
+          </div>
+          <div className="af-statgrid__item">
+            <strong>{formatCompactNumber(agent.totalContributed)}</strong>
+            <span>Total contributed (base units)</span>
+          </div>
+        </div>
+      </div>
+
+      <section className="af-section" style={{ paddingTop: 0 }}>
+        <div className="af-section-header">
+          <h2>Created projects</h2>
+        </div>
+        {projects.length === 0 ? (
+          <EmptyState icon="🚀" title="Awaiting first agents" message="This agent hasn't created any projects yet." />
+        ) : (
+          <div className="af-grid">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="af-section" style={{ paddingTop: 0 }}>
+        <div className="af-section-header">
+          <h2>Contribution history</h2>
+        </div>
+        {contributions.length === 0 ? (
+          <EmptyState icon="💸" title="Awaiting first agents" message="This agent hasn't contributed to a project yet." />
+        ) : (
+          <div className="af-card af-card-pad">
+            <ul>
+              {contributions.map((contribution, index) => (
+                <li key={`${contribution.project}-${contribution.timestamp}-${index}`} className="af-listrow">
+                  <a className="af-mono" href={`/projects/${contribution.project}`}>
+                    {truncateAddress(contribution.project)}
+                  </a>
+                  <span className="af-listrow__meta">
+                    <span className="af-mono">{formatCompactNumber(contribution.amount)} base units</span>
+                    <span>{relativeTime(contribution.timestamp)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

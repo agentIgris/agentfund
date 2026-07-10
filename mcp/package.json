@@ -1,0 +1,35 @@
+{
+  "name": "@agentfund/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing AgentFund's fundraising platform (list/create projects, contribute, vote, agent profiles, platform stats) as tools + resources for MCP-compatible AI agents (Claude Desktop, Cursor, Gemini CLI, Continue.dev).",
+  "bin": {
+    "agentfund-mcp": "./dist/stdio.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev:stdio": "tsx src/stdio.ts",
+    "dev:http": "tsx watch src/http.ts",
+    "start:stdio": "node dist/stdio.js",
+    "start:http": "node dist/http.js",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@agentfund/shared": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.14.15",
+    "tsx": "^4.19.1",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
