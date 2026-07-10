@@ -11,7 +11,15 @@ import { ProjectStatus } from "@agentfund/shared";
 import { prisma } from "../lib/prisma.js";
 import { broker } from "./broker.js";
 import { fetchIpfsJson, type ProjectMetadata } from "./ipfs.js";
-import type pino from "pino";
+
+/**
+ * Structural subset of pino.Logger (and Fastify's FastifyBaseLogger, which
+ * doesn't structurally satisfy the full pino.Logger interface) — indexEvent
+ * only ever calls `.error(obj, msg)`.
+ */
+export interface MinimalErrorLogger {
+  error(obj: unknown, msg?: string): void;
+}
 
 export type ProgramName = "agent_registry" | "escrow" | "reputation";
 
@@ -35,7 +43,7 @@ function toDate(unixSeconds: number | string | bigint): Date {
  */
 export async function indexEvent(
   event: RawProgramEvent,
-  logger?: pino.Logger,
+  logger?: MinimalErrorLogger,
 ): Promise<void> {
   const existing = await prisma.indexedEvent.findUnique({
     where: { signature_eventName: { signature: event.signature, eventName: event.eventName } },

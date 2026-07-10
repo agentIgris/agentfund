@@ -52,9 +52,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+function buildQuery<T extends object>(params: T): string {
   const qs = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
+  const entries = Object.entries(params) as [string, string | number | boolean | undefined][];
+  for (const [key, value] of entries) {
     if (value !== undefined && value !== "") qs.set(key, String(value));
   }
   const str = qs.toString();

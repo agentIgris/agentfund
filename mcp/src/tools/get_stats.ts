@@ -23,7 +23,7 @@ export function registerGetPlatformStatsTool(server: McpServer, ctx: ApiContext)
       const stats = await api.get<PlatformStats>(ctx, "/stats");
       return {
         content: [{ type: "text", text: JSON.stringify(stats, null, 2) }],
-        structuredContent: stats as Record<string, unknown>,
+        structuredContent: { ...stats },
       };
     },
   );

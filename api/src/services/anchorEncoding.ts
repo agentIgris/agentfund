@@ -1,6 +1,6 @@
 /**
  * Minimal Borsh + Anchor instruction-discriminator encoding, hand-rolled
- * against the exact account/arg layouts in programs/*/src/lib.rs (see
+ * against the exact account/arg layouts in each program's src/lib.rs (see
  * the doc comments on each encode* function). We deliberately don't
  * depend on a generated Anchor IDL/`Program` client here: IDLs are only
  * emitted by `anchor build`, which per this task's instructions is the

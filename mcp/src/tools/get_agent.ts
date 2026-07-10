@@ -27,7 +27,7 @@ export function registerGetAgentProfileTool(server: McpServer, ctx: ApiContext):
       const profile = await api.get<Agent>(ctx, `/agents/${encodeURIComponent(walletAddress)}`);
       return {
         content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
-        structuredContent: profile as Record<string, unknown>,
+        structuredContent: { ...profile },
       };
     },
   );

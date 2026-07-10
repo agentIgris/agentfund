@@ -8,15 +8,18 @@
  */
 import { createHmac, randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { Queue, Worker, type ConnectionOptions } from "bullmq";
-import IORedis from "ioredis";
+import { Queue, Worker, type RedisOptions } from "bullmq";
+import { Redis as IORedis } from "ioredis";
 import { config } from "../config.js";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { broker, type BrokerEvent } from "../services/broker.js";
 import { registerWebhookBodySchema } from "../schema/webhooks.js";
 
-const connectionOptions: ConnectionOptions = { maxRetriesPerRequest: null };
+// `RedisOptions` (not bullmq's broader `ConnectionOptions` union, which also
+// admits pre-built `Redis`/`Cluster` instances) is what the `IORedis`
+// constructor below actually accepts.
+const connectionOptions: RedisOptions = { maxRetriesPerRequest: null };
 
 let queue: Queue | undefined;
 let worker: Worker | undefined;

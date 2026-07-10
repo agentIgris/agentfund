@@ -6,7 +6,7 @@
  * module composes.
  *
  * PDA seeds are imported from @agentfund/shared's PDA_SEEDS so they can
- * never drift from the Rust programs (programs/*/src/lib.rs), which
+ * never drift from the Rust programs (each program's src/lib.rs), which
  * import the same literal seed strings.
  */
 import {

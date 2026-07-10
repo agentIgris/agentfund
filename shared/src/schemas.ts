@@ -5,6 +5,7 @@
  * schema here (and vice versa).
  */
 import { z } from "zod";
+import type { WsChannel } from "./types.js";
 
 // ─────────────────────────────────────────────────────────────
 // Enums
@@ -133,10 +134,15 @@ export const txStatusResponseSchema = z.object({
 // WebSocket protocol
 // ─────────────────────────────────────────────────────────────
 
-const wsChannelSchema = z.union([
-  z.enum(["projects", "contributions", "votes"]),
-  z.string().regex(/^project:.+$/),
-]);
+const wsChannelSchema = z.custom<WsChannel>(
+  (val) =>
+    typeof val === "string" &&
+    (val === "projects" ||
+      val === "contributions" ||
+      val === "votes" ||
+      /^project:.+$/.test(val)),
+  { message: "Invalid WS channel" },
+);
 
 export const wsAuthMessageSchema = z.object({
   type: z.literal("auth"),
