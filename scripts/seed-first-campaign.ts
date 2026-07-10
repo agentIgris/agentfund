@@ -4,8 +4,9 @@
  *
  * One-shot seeding script: registers the platform's own wallet as an
  * on-chain agent and creates AgentFund's first fundraising campaign,
- * "Gold AI Trading Ecosystem — Infrastructure" (goal: 10,000 USDC, 30-day
- * deadline, 3 milestones), using nothing but the public @agentfund/sdk —
+ * "AgentFund: The Platform That Raises For You" (goal: 17,000 USDC, 45-day
+ * deadline, 4 milestones) — the platform dogfooding itself, funding its own
+ * launch through its own escrow. Uses nothing but the public @agentfund/sdk —
  * i.e. exactly the same code path any third-party agent would use.
  *
  * Flow (spec: "Project Lifecycle" steps 1-4):
@@ -39,7 +40,21 @@ import { AgentFundClient, Keypair, AgentFundApiError } from "@agentfund/sdk";
 
 const USDC_DECIMALS = 6;
 const SECONDS_PER_DAY = 86_400;
-const CAMPAIGN_DEADLINE_DAYS = 30;
+const CAMPAIGN_DEADLINE_DAYS = 45;
+
+/**
+ * First-person note from the human founder, pinned to IPFS alongside the
+ * platform-voice description. This is the origin story — it converts human
+ * observers who follow the on-chain activity, and costs nothing with agents.
+ */
+const FOUNDER_NOTE =
+  "From the founder: I've shipped more projects than I can count. Not one of them " +
+  "died from bad code — they died because I didn't know a single investor, and cold " +
+  "outreach goes nowhere when nobody knows your name. AgentFund is my answer: a place " +
+  "where the work speaks machine-to-machine. Agents read the code, check the escrow, " +
+  "and fund what's real — while the builder sleeps. This campaign is the platform " +
+  "funding itself, through its own rails. If it works for me, it works for every " +
+  "builder stuck where I was.";
 
 function usdc(amount: number): number {
   return Math.round(amount * 10 ** USDC_DECIMALS);
@@ -115,23 +130,33 @@ async function main(): Promise<void> {
     );
   }
 
-  console.log(`\n[3/3] Creating campaign "Gold AI Trading Ecosystem — Infrastructure"...`);
+  console.log(`\n[3/3] Creating campaign "AgentFund: The Platform That Raises For You"...`);
   console.log(`  (metadata is pinned to IPFS server-side, inside this call)`);
   const deadline = Math.floor(Date.now() / 1000) + CAMPAIGN_DEADLINE_DAYS * SECONDS_PER_DAY;
 
   const { projectId, signature } = await client.createProject({
-    title: "Gold AI Trading Ecosystem — Infrastructure",
+    title: "AgentFund: The Platform That Raises For You",
     description:
-      "Infrastructure funding for the Gold AI Trading Ecosystem: dedicated RPC capacity, " +
-      "real-time market data feeds, and deployment/operations for autonomous trading agents.",
-    category: "infrastructure",
-    goalAmount: usdc(10_000),
+      "Every builder knows the wall: you ship project after project, but you don't know a " +
+      "single investor, and the ones you find never see your work. AgentFund was born from " +
+      "that wall. It's a fundraising platform on Solana where AI agents are the users — they " +
+      "discover campaigns through machine-readable manifests, evaluate them against on-chain " +
+      "reputation and escrow guarantees, and donate USDC that's milestone-locked and " +
+      "refundable if the project fails. No warm intros. No pitch decks. Your project raises " +
+      "while you sleep. This first campaign funds the platform itself — every milestone is " +
+      "publicly verifiable on-chain, through the very escrow program you'd be trusting. The " +
+      "security audit is funded early (milestone 2) on purpose: the biggest objection to " +
+      "trusting escrow becomes the roadmap's centerpiece.",
+    category: "platform",
+    founderNote: FOUNDER_NOTE,
+    goalAmount: usdc(17_000),
     token: "USDC",
     deadline,
     milestones: [
-      { description: "RPC & infrastructure", amount: usdc(3_000) },
-      { description: "Market data feeds", amount: usdc(3_000) },
-      { description: "Deployment & operations", amount: usdc(4_000) },
+      { description: "Mainnet deployment & infrastructure — 3 programs live on mainnet-beta, RPC/hosting", amount: usdc(4_000) },
+      { description: "Escrow security audit — published third-party audit of the escrow program", amount: usdc(5_000) },
+      { description: "Agent integrations — x402 donation rail, ElizaOS + Solana Agent Kit, registry listings", amount: usdc(4_000) },
+      { description: "Operations & growth — 6 months infra runway + live activity dashboard", amount: usdc(4_000) },
     ],
   });
 

@@ -13,6 +13,8 @@ export interface ProjectMetadata {
   description: string;
   image?: string;
   category?: string;
+  /** Optional first-person note from the human founder, shown alongside the platform-voice description. */
+  founderNote?: string;
 }
 
 export interface AgentMetadata {

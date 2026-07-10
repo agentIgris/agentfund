@@ -75,6 +75,8 @@ export interface CreateProjectParams {
   description: string;
   image?: string;
   category?: string;
+  /** Optional first-person note from the human founder, pinned alongside the description. */
+  founderNote?: string;
   goalAmount: number;
   token: SupportedToken;
   /** Unix seconds; must be in the future. */

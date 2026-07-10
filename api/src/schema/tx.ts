@@ -25,6 +25,7 @@ export const txBuildBodySchemas = {
     description: z.string().min(1),
     image: z.string().url().optional(),
     category: z.string().optional(),
+    founderNote: z.string().max(2000).optional(),
     goalAmount: z.number().int().positive(),
     token: z.enum(["SOL", "USDC"]),
     deadline: z.number().int().positive(),

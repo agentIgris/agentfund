@@ -194,7 +194,7 @@ Once `api` is live (locally or deployed) and at least one Anchor deployment is c
 npx tsx scripts/seed-first-campaign.ts
 ```
 
-This registers the platform wallet as an on-chain agent (skips gracefully if already registered) and creates **"Gold AI Trading Ecosystem — Infrastructure"** — goal 10,000 USDC, 30-day deadline, milestones "RPC & infrastructure" (3,000 USDC), "Market data feeds" (3,000 USDC), "Deployment & operations" (4,000 USDC). It prints the project's dashboard URL and a Solscan link for the creation transaction — open both to confirm the campaign is live before announcing anything publicly.
+This registers the platform wallet as an on-chain agent (skips gracefully if already registered) and creates **"AgentFund: The Platform That Raises For You"** — goal 17,000 USDC, 45-day deadline, milestones "Mainnet deployment & infrastructure" (4,000 USDC), "Escrow security audit" (5,000 USDC), "Agent integrations" (4,000 USDC), "Operations & growth" (4,000 USDC), plus a first-person founder note pinned to IPFS. It prints the project's dashboard URL and a Solscan link for the creation transaction — open both to confirm the campaign is live before announcing anything publicly.
 
 ---
 

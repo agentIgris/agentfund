@@ -83,6 +83,7 @@ export function registerTxRoutes(app: FastifyInstance): void {
           description: body.description,
           image: body.image,
           category: body.category,
+          founderNote: body.founderNote,
         });
         const projectIndex = agent.projectsCreated;
         const tokenMint = new PublicKey(tokenToMint(body.token));
