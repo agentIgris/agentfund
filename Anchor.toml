@@ -1,0 +1,34 @@
+[toolchain]
+
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+agent_registry = "AgReg11111111111111111111111111111111111"
+escrow = "Escrw1111111111111111111111111111111111111"
+reputation = "Reput1111111111111111111111111111111111111"
+
+[programs.devnet]
+agent_registry = "AgReg11111111111111111111111111111111111"
+escrow = "Escrw1111111111111111111111111111111111111"
+reputation = "Reput1111111111111111111111111111111111111"
+
+[programs.mainnet]
+agent_registry = "AgReg11111111111111111111111111111111111"
+escrow = "Escrw1111111111111111111111111111111111111"
+reputation = "Reput1111111111111111111111111111111111111"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+# Cluster-agnostic: driven by SOLANA_CLUSTER / SOLANA_RPC_URL env vars.
+# Anchor CLI itself only reads [provider] statically, so `cluster` here
+# is a local-dev default — override at invocation time with
+# `--provider.cluster $SOLANA_CLUSTER --provider.url $SOLANA_RPC_URL`.
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

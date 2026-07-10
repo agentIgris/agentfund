@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = [
+    "programs/agent_registry",
+    "programs/escrow",
+    "programs/reputation",
+]
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1

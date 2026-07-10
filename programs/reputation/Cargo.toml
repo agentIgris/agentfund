@@ -1,0 +1,19 @@
+[package]
+name = "reputation"
+version = "0.1.0"
+description = "AgentFund: soulbound compressed-NFT reputation tokens"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "reputation"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"

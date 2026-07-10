@@ -1,0 +1,37 @@
+{
+  "name": "agentfund",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "api",
+    "mcp",
+    "acp",
+    "web",
+    "sdk"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "build:shared": "npm run build --workspace shared",
+    "build:api": "npm run build --workspace api",
+    "build:mcp": "npm run build --workspace mcp",
+    "build:acp": "npm run build --workspace acp",
+    "build:web": "npm run build --workspace web",
+    "build:sdk": "npm run build --workspace sdk",
+    "dev:api": "npm run dev --workspace api",
+    "dev:mcp": "npm run dev --workspace mcp",
+    "dev:acp": "npm run dev --workspace acp",
+    "dev:web": "npm run dev --workspace web",
+    "dev:sdk": "npm run dev --workspace sdk",
+    "anchor:build": "anchor build",
+    "anchor:test": "anchor test",
+    "anchor:deploy": "anchor deploy"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
