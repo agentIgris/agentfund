@@ -19,7 +19,7 @@ export function registerProjectsFeedResource(server: McpServer, ctx: ApiContext)
       mimeType: "application/json",
     },
     async (uri) => {
-      const projects = await api.get<Project[]>(ctx, "/projects");
+      const { projects } = await api.get<{ projects: Project[] }>(ctx, "/projects");
       return {
         contents: [
           {

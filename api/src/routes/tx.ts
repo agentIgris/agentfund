@@ -10,7 +10,22 @@ import type { FastifyInstance } from "fastify";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { NATIVE_SOL_MINT, resolveUsdcMint } from "@agentfund/shared";
 import { prisma } from "../lib/prisma.js";
+import { config } from "../config.js";
 import { requireAuth } from "../middleware/auth.js";
+
+// Compute-budget instructions (priority fees / CU limits) are legitimately
+// prepended by agents to otherwise-AgentFund-only transactions.
+const COMPUTE_BUDGET_PROGRAM_ID = "ComputeBudget111111111111111111111111111111";
+
+/** Program IDs a submitted transaction is allowed to touch (our three programs + compute budget). */
+function allowedProgramIds(): Set<string> {
+  const ids = [
+    config.solana.registryProgramId,
+    config.solana.escrowProgramId,
+    config.solana.reputationProgramId,
+  ].filter((id) => id.length > 0);
+  return new Set([...ids, COMPUTE_BUDGET_PROGRAM_ID]);
+}
 import { getConnection, buildUnsignedTransactionBase64 } from "../services/solana.js";
 import {
   buildContributeIx,
@@ -157,7 +172,7 @@ export function registerTxRoutes(app: FastifyInstance): void {
     }
   });
 
-  app.post("/tx/send", async (request, reply) => {
+  app.post("/tx/send", { preHandler: requireAuth }, async (request, reply) => {
     const parsed = txSendBodySchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: "invalid_request", details: parsed.error.flatten() });
 
@@ -169,10 +184,34 @@ export function registerTxRoutes(app: FastifyInstance): void {
       return reply.code(400).send({ error: "invalid_base64" });
     }
 
+    let tx: Transaction;
     try {
-      // Sanity-check it deserializes as a (fully or partially) signed transaction before broadcasting.
-      Transaction.from(raw);
+      tx = Transaction.from(raw);
+    } catch {
+      return reply.code(400).send({ error: "invalid_transaction" });
+    }
+
+    // Not an open relay: only broadcast transactions whose every instruction
+    // targets one of AgentFund's own programs (+ compute budget). Otherwise the
+    // endpoint would let any authed wallet push arbitrary traffic through the
+    // operator's RPC. When no program IDs are configured (local bootstrap) we
+    // skip the check but warn — production always has them set.
+    const allowed = allowedProgramIds();
+    if (allowed.size > 1) {
+      const foreign = tx.instructions.find((ix) => !allowed.has(ix.programId.toBase58()));
+      if (foreign) {
+        return reply.code(400).send({
+          error: "disallowed_program",
+          message: `Transaction touches non-AgentFund program ${foreign.programId.toBase58()}.`,
+        });
+      }
+    } else {
+      request.log.warn("tx/send: program IDs unconfigured, skipping program allowlist check");
+    }
+
+    try {
       const signature = await conn.sendRawTransaction(raw, { skipPreflight: false });
+      request.log.info({ signature, wallet: request.agentWallet }, "tx/send: broadcast");
       return reply.send({ signature });
     } catch (err) {
       request.log.error({ err }, "tx/send: broadcast failed");

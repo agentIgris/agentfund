@@ -15,6 +15,7 @@ import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { broker, type BrokerEvent } from "../services/broker.js";
 import { registerWebhookBodySchema } from "../schema/webhooks.js";
+import { assertPublicWebhookUrl, SsrfError } from "../lib/ssrf.js";
 
 // `RedisOptions` (not bullmq's broader `ConnectionOptions` union, which also
 // admits pre-built `Redis`/`Cluster` instances) is what the `IORedis`
@@ -51,6 +52,9 @@ export function startWebhookDeliveryWorker(): Worker {
     config.webhooks.queueName,
     async (job) => {
       const { url, secret, event } = job.data;
+      // Re-validate at delivery time to defeat DNS rebinding (host may resolve
+      // to a public IP at registration and a private one now).
+      await assertPublicWebhookUrl(url);
       const body = JSON.stringify(event);
       const res = await fetch(url, {
         method: "POST",
@@ -103,6 +107,15 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     const parsed = registerWebhookBodySchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: "invalid_request", details: parsed.error.flatten() });
     const body = parsed.data;
+
+    // SSRF guard: reject callback URLs pointing at loopback/link-local/private hosts.
+    try {
+      await assertPublicWebhookUrl(body.url);
+    } catch (err) {
+      if (err instanceof SsrfError) return reply.code(400).send({ error: "invalid_webhook_url", message: err.message });
+      throw err;
+    }
+
     const secret = body.secret ?? randomBytes(24).toString("hex");
 
     const registration = await prisma.webhookRegistration.create({

@@ -33,7 +33,14 @@ export function registerListProjectsTool(server: McpServer, ctx: ApiContext): vo
       },
     },
     async ({ status, category, minGoal, token, limit }) => {
-      const projects = await api.get<Project[]>(ctx, "/projects", { status, category, minGoal, token, limit });
+      // GET /projects returns { projects: Project[] } — unwrap the envelope.
+      const { projects } = await api.get<{ projects: Project[] }>(ctx, "/projects", {
+        status,
+        category,
+        minGoal,
+        token,
+        limit,
+      });
       return {
         content: [{ type: "text", text: JSON.stringify(projects, null, 2) }],
         structuredContent: { projects },

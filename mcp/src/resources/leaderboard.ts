@@ -19,7 +19,7 @@ export function registerLeaderboardResource(server: McpServer, ctx: ApiContext):
       mimeType: "application/json",
     },
     async (uri) => {
-      const agents = await api.get<Agent[]>(ctx, "/agents");
+      const { agents } = await api.get<{ agents: Agent[] }>(ctx, "/agents");
       return {
         contents: [
           {

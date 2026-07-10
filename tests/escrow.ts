@@ -120,10 +120,10 @@ describe("escrow", () => {
         new anchor.BN(deadline),
         opts.milestoneCount,
         mint,
-        creator.publicKey,
       )
       .accounts({
         payer: provider.wallet.publicKey,
+        creator: creator.publicKey,
         escrow,
         mint,
         escrowAta,
@@ -131,6 +131,7 @@ describe("escrow", () => {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
+      .signers([creator])
       .rpc();
 
     return { project, escrow, escrowAta, deadline };

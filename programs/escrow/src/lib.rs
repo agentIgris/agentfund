@@ -75,16 +75,24 @@ pub mod escrow {
         deadline: i64,
         milestone_count: u8,
         token_mint: Pubkey,
-        creator: Pubkey,
     ) -> Result<()> {
         require!(goal_amount > 0, EscrowError::InvalidGoalAmount);
         require!(milestone_count > 0, EscrowError::InvalidMilestoneCount);
         let now = Clock::get()?.unix_timestamp;
         require!(deadline > now, EscrowError::InvalidDeadline);
 
+        // SECURITY: `creator` is NOT a free instruction argument — it is bound
+        // to the `creator` signer, so the address that later receives every
+        // milestone payout must have authorized this escrow's creation.
+        // TODO(integration, pre-mainnet): additionally bind `project`,
+        // `goal_amount`, `deadline`, `milestone_count` to the registry's
+        // ProjectAccount (via CPI from agent_registry::create_project, or by
+        // verifying a passed-in registry account owned by REGISTRY_PROGRAM_ID)
+        // so a third party cannot front-run the [ESCROW_SEED, project] slot
+        // with mismatched terms. See REVIEW_FINDINGS.md #3 / #9.
         let escrow = &mut ctx.accounts.escrow;
         escrow.project = project;
-        escrow.creator = creator;
+        escrow.creator = ctx.accounts.creator.key();
         escrow.token_mint = token_mint;
         escrow.goal_amount = goal_amount;
         escrow.deadline = deadline;
@@ -294,6 +302,21 @@ pub mod escrow {
         let now = Clock::get()?.unix_timestamp;
 
         require_keys_eq!(ctx.accounts.escrow.project, project, EscrowError::ProjectMismatch);
+        // CRITICAL: a milestone can only be released if the campaign actually
+        // SUCCEEDED — i.e. reached its funding goal. Without this an attacker
+        // could contribute a small amount, self-vote >50% of the (tiny) current
+        // total_deposited, and drain the escrow before the goal is ever met.
+        // Requiring goal-met here also means "goal met" (no refunds) and
+        // "goal not met" (no releases) are mutually exclusive states, which is
+        // what neutralises the stale-vote-weight-after-refund vector.
+        require!(
+            ctx.accounts.escrow.total_deposited >= ctx.accounts.escrow.goal_amount,
+            EscrowError::GoalNotMet
+        );
+        require!(
+            ctx.accounts.escrow.status == CampaignStatus::Active,
+            EscrowError::CampaignNotActive
+        );
         require!(
             milestone_index == ctx.accounts.escrow.milestone_index,
             EscrowError::MilestoneOutOfOrder
@@ -663,10 +686,14 @@ pub struct Refunded {
 // ─────────────────────────────────────────────────────────────
 
 #[derive(Accounts)]
-#[instruction(project: Pubkey, goal_amount: u64, deadline: i64, milestone_count: u8, token_mint: Pubkey, creator: Pubkey)]
+#[instruction(project: Pubkey, goal_amount: u64, deadline: i64, milestone_count: u8, token_mint: Pubkey)]
 pub struct InitializeEscrow<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
+    /// The project creator — must sign, and is the ONLY address milestone
+    /// releases will ever pay. Bound into `escrow.creator` at init.
+    pub creator: Signer<'info>,
 
     #[account(
         init,
@@ -843,6 +870,8 @@ pub enum EscrowError {
     DeadlineNotPassed,
     #[msg("Campaign goal was met; refunds are not available")]
     GoalMet,
+    #[msg("Campaign goal has not been reached; milestones cannot be released")]
+    GoalNotMet,
     #[msg("Funds have already been released for this campaign")]
     AlreadyReleased,
     #[msg("Nothing to refund for this contributor")]

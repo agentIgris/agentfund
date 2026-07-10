@@ -9,6 +9,7 @@
  * lines — we track an invoke stack to attribute each event to the
  * program that emitted it).
  */
+import { timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { config } from "../config.js";
 import { anchorEventDiscriminator, BorshReader } from "./anchorEncoding.js";
@@ -199,11 +200,21 @@ export function parseTransactionLogs(tx: HeliusTransactionLike): RawProgramEvent
 /** Registers the Helius webhook receiver route on the given Fastify instance. */
 export function registerHeliusWebhook(app: FastifyInstance): void {
   app.post(config.helius.webhookPath, async (request, reply) => {
-    if (config.helius.webhookSecret) {
-      const provided = request.headers["authorization"] ?? request.headers["helius-webhook-secret"];
-      if (provided !== config.helius.webhookSecret) {
-        return reply.code(401).send({ error: "invalid webhook secret" });
-      }
+    // Fail CLOSED: if no secret is configured, reject every request rather than
+    // silently accepting spoofed indexer payloads (which mutate project status
+    // and reputation). Production startup (assertProductionConfig) additionally
+    // guarantees the secret is set, so this only affects misconfigured dev.
+    const expected = config.helius.webhookSecret;
+    if (!expected) {
+      request.log.warn("helius webhook rejected: HELIUS_WEBHOOK_SECRET not configured");
+      return reply.code(503).send({ error: "webhook not configured" });
+    }
+    const providedRaw = request.headers["authorization"] ?? request.headers["helius-webhook-secret"];
+    const provided = Array.isArray(providedRaw) ? providedRaw[0] : providedRaw;
+    const providedBuf = Buffer.from(provided ?? "", "utf8");
+    const expectedBuf = Buffer.from(expected, "utf8");
+    if (providedBuf.length !== expectedBuf.length || !timingSafeEqual(providedBuf, expectedBuf)) {
+      return reply.code(401).send({ error: "invalid webhook secret" });
     }
 
     const body = request.body;

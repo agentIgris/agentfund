@@ -89,3 +89,35 @@ export const config = {
 };
 
 export type Config = typeof config;
+
+const INSECURE_DEFAULT_SECRET = "dev-insecure-secret-change-me";
+
+/**
+ * Fail fast in production if any security-critical secret is missing or left at
+ * its insecure development default. Called at startup (see index.ts) so a
+ * misconfigured deploy crashes loudly instead of silently accepting forged
+ * JWTs, unsigned webhook payloads, or spoofed Helius indexer callbacks.
+ */
+export function assertProductionConfig(): void {
+  if (!config.isProduction) return;
+  const errors: string[] = [];
+
+  if (!process.env.JWT_SECRET || config.auth.jwtSecret === INSECURE_DEFAULT_SECRET) {
+    errors.push("JWT_SECRET must be set to a strong random value in production.");
+  }
+  if (config.auth.jwtSecret.length < 32) {
+    errors.push("JWT_SECRET must be at least 32 characters.");
+  }
+  if (!process.env.WEBHOOK_SIGNING_SECRET || config.webhooks.signingSecret === INSECURE_DEFAULT_SECRET) {
+    errors.push("WEBHOOK_SIGNING_SECRET must be set to a dedicated strong value in production.");
+  }
+  if (!config.helius.webhookSecret) {
+    errors.push("HELIUS_WEBHOOK_SECRET must be set in production (the indexer webhook is unauthenticated without it).");
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Insecure production configuration:\n  - ${errors.join("\n  - ")}`,
+    );
+  }
+}

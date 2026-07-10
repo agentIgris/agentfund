@@ -50,10 +50,12 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     const nonce = randomBytes(16).toString("hex");
     const message = buildChallengeMessage(nonce);
 
-    // Single-use, 5-minute TTL (config.auth.challengeTtlSeconds) nonce → wallet mapping.
+    // Single-use, 5-minute TTL (config.auth.challengeTtlSeconds) nonce → {wallet, message}.
+    // We persist the EXACT canonical message (incl. its timestamp) so /auth/verify can
+    // reject any client-supplied message that isn't byte-identical to what we issued.
     await broker.connection.set(
       `${NONCE_KEY_PREFIX}${nonce}`,
-      wallet,
+      JSON.stringify({ wallet, message }),
       "EX",
       config.auth.challengeTtlSeconds,
     );
@@ -75,12 +77,28 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     const key = `${NONCE_KEY_PREFIX}${nonce}`;
 
     // Single-use: atomically fetch-and-delete so a replayed challenge can never verify twice.
-    const storedWallet = await (broker.connection as unknown as { getdel(k: string): Promise<string | null> }).getdel(key);
-    if (!storedWallet || storedWallet !== wallet) {
+    const stored = await (broker.connection as unknown as { getdel(k: string): Promise<string | null> }).getdel(key);
+    if (!stored) {
       return reply.code(401).send({ error: "invalid_or_expired_challenge" });
     }
 
-    const verified = verifyChallengeSignature(message, signature, wallet);
+    let storedWallet: string;
+    let storedMessage: string;
+    try {
+      ({ wallet: storedWallet, message: storedMessage } = JSON.parse(stored));
+    } catch {
+      return reply.code(401).send({ error: "invalid_or_expired_challenge" });
+    }
+
+    // Bind the challenge to the wallet AND require the submitted message to be
+    // byte-for-byte the canonical message we issued. Without this equality check
+    // an attacker could get a signature verified over an arbitrary message of
+    // their choosing (the nonce substring alone is not sufficient binding).
+    if (storedWallet !== wallet || storedMessage !== message) {
+      return reply.code(401).send({ error: "invalid_or_expired_challenge" });
+    }
+
+    const verified = verifyChallengeSignature(storedMessage, signature, wallet);
 
     if (!verified) {
       return reply.code(401).send({ error: "invalid_signature" });

@@ -80,7 +80,8 @@ export interface Milestone {
 /** Mirrors on-chain ContributionAccount PDA (escrow program). */
 export interface Contribution {
   contributor: string;
-  project: string;
+  /** Project PDA id — matches Prisma `Contribution.projectId` and API payloads. */
+  projectId: string;
   /** Base units (lamports/USDC micro-units). */
   amount: number;
   timestamp: number;

@@ -101,9 +101,9 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
           <div className="af-card af-card-pad">
             <ul>
               {contributions.map((contribution, index) => (
-                <li key={`${contribution.project}-${contribution.timestamp}-${index}`} className="af-listrow">
-                  <a className="af-mono" href={`/projects/${contribution.project}`}>
-                    {truncateAddress(contribution.project)}
+                <li key={`${contribution.projectId}-${contribution.timestamp}-${index}`} className="af-listrow">
+                  <a className="af-mono" href={`/projects/${contribution.projectId}`}>
+                    {truncateAddress(contribution.projectId)}
                   </a>
                   <span className="af-listrow__meta">
                     <span className="af-mono">{formatCompactNumber(contribution.amount)} base units</span>

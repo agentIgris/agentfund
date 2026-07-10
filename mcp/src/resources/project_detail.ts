@@ -23,7 +23,7 @@ export function registerProjectDetailResource(server: McpServer, ctx: ApiContext
       if (!raw) {
         throw new Error(`agentfund://project/{id} resource requires an id, got: ${uri.href}`);
       }
-      const project = await api.get<Project>(ctx, `/projects/${encodeURIComponent(raw)}`);
+      const { project } = await api.get<{ project: Project }>(ctx, `/projects/${encodeURIComponent(raw)}`);
       return {
         contents: [
           {

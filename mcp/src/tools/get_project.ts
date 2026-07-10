@@ -23,11 +23,12 @@ export function registerGetProjectTool(server: McpServer, ctx: ApiContext): void
       },
     },
     async ({ projectId }) => {
-      const [project, milestones] = await Promise.all([
-        api.get<Project>(ctx, `/projects/${encodeURIComponent(projectId)}`),
-        api.get<Milestone[]>(ctx, `/projects/${encodeURIComponent(projectId)}/milestones`),
+      // GET /projects/:id → { project }, GET /projects/:id/milestones → { milestones }.
+      const [projectRes, milestonesRes] = await Promise.all([
+        api.get<{ project: Project }>(ctx, `/projects/${encodeURIComponent(projectId)}`),
+        api.get<{ milestones: Milestone[] }>(ctx, `/projects/${encodeURIComponent(projectId)}/milestones`),
       ]);
-      const result = { project, milestones };
+      const result = { project: projectRes.project, milestones: milestonesRes.milestones };
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         structuredContent: result,

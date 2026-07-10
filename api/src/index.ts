@@ -9,7 +9,7 @@ import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import swagger from "@fastify/swagger";
-import { config } from "./config.js";
+import { config, assertProductionConfig } from "./config.js";
 import { prisma } from "./lib/prisma.js";
 import { broker } from "./services/broker.js";
 import { registerHeliusWebhook } from "./services/helius.js";
@@ -24,6 +24,9 @@ import { registerWebSocketServer } from "./ws/server.js";
 const DEFAULT_BROKER_CHANNELS = ["projects", "contributions", "votes"] as const;
 
 export async function buildApp() {
+  // Crash loudly on an insecure production config before binding the port.
+  assertProductionConfig();
+
   const app = Fastify({
     logger: {
       level: config.logLevel,
