@@ -1,0 +1,6 @@
+# TLS is automatic (Let's Encrypt) once api.agentfund.online resolves here.
+# reverse_proxy handles WebSocket upgrades natively.
+api.agentfund.online {
+	encode gzip
+	reverse_proxy api:4000
+}
