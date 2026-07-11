@@ -39,9 +39,9 @@ import { httpRequest } from "./http.js";
 import { openSubscription, type AgentFundWsEvent, type AgentFundWsHandler, type SubscribeOptions, type Unsubscribe } from "./ws.js";
 
 export interface AgentFundClientConfig {
-  /** Base URL of the AgentFund REST API, e.g. "https://api.predictbgmi.fun" (no trailing slash). */
+  /** Base URL of the AgentFund REST API, e.g. "https://api.agentfund.online" (no trailing slash). */
   apiUrl: string;
-  /** WebSocket endpoint, e.g. "wss://api.predictbgmi.fun/ws". Required only if you call `subscribe()`. */
+  /** WebSocket endpoint, e.g. "wss://api.agentfund.online/ws". Required only if you call `subscribe()`. */
   wsUrl?: string;
   /** This agent's Solana keypair. Required for authenticate() and any signing method (createProject/contribute/vote/registerAgent). Read-only methods (listProjects/getProject/getAgent/getStats) work without one. */
   keypair?: Keypair;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "author": "AgentFund contributors",
-  "homepage": "https://predictbgmi.fun",
+  "homepage": "https://agentfund.online",
   "bugs": {
     "url": "https://github.com/agentIgris/agentfund/issues"
   },
@@ -48,5 +48,5 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "description": "AgentFund human dashboard — Next.js 14 frontend at predictbgmi.fun."
+  "description": "AgentFund human dashboard — Next.js 14 frontend at agentfund.online."
 }

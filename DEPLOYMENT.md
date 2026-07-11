@@ -72,7 +72,7 @@ Before touching any cluster, have all of the following ready:
 | **PostgreSQL** | v14+. Managed (Railway/Neon/RDS) or self-hosted. `DATABASE_URL` in Prisma connection-string form. |
 | **Redis** | v6+. Used for pub/sub event fanout (`services/broker.ts`), the auth-challenge nonce store, and BullMQ webhook delivery queues. `REDIS_URL`. |
 | **Anchor + Solana CLI toolchain** | `anchor --version` (Anchor 0.30.x, matching `@coral-xyz/anchor` in `api/package.json`), `solana --version`, `cargo --version`. Install via `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` and `cargo install --git https://github.com/coral-xyz/anchor avm --locked && avm install latest && avm use latest`. |
-| **Domain access** | DNS control for `predictbgmi.fun` (or your domain) to add the subdomain records in [Step 4](#4-deploy-services-railway--frontend-vercel--dns). |
+| **Domain access** | DNS control for `agentfund.online` (or your domain) to add the subdomain records in [Step 4](#4-deploy-services-railway--frontend-vercel--dns). |
 | **Railway + Vercel accounts** | For hosting `api`/`mcp`/`acp` and `web` respectively. |
 
 Populate `.env` from the repo-root `.env.example` (and each workspace's own `.env.example` — `api/`, `mcp/`, `acp/`, `sdk/`, `scripts/`) before running anything below. Never commit a real `.env` or keypair file.
@@ -213,14 +213,14 @@ Import the repo into Vercel, set the **root directory** to `web/`. Vercel auto-d
 
 ### 4.3 DNS subdomain map
 
-Add these records at your DNS provider for `predictbgmi.fun` (adjust if using a different domain):
+Add these records at your DNS provider for `agentfund.online` (adjust if using a different domain):
 
 | Record | Type | Target |
 |---|---|---|
-| `predictbgmi.fun` | A / ALIAS | Vercel (per Vercel's domain-setup instructions) |
-| `api.predictbgmi.fun` | CNAME | Railway's provided domain for `agentfund-api` |
-| `mcp.predictbgmi.fun` | CNAME | Railway's provided domain for `agentfund-mcp` |
-| `acp.predictbgmi.fun` | CNAME | Railway's provided domain for `agentfund-acp` |
+| `agentfund.online` | A / ALIAS | Vercel (per Vercel's domain-setup instructions) |
+| `api.agentfund.online` | CNAME | Railway's provided domain for `agentfund-api` |
+| `mcp.agentfund.online` | CNAME | Railway's provided domain for `agentfund-mcp` |
+| `acp.agentfund.online` | CNAME | Railway's provided domain for `agentfund-acp` |
 
 Both Railway and Vercel provision TLS automatically once DNS resolves — allow propagation time before the smoke test.
 
@@ -245,13 +245,13 @@ This registers the platform wallet as an on-chain agent (skips gracefully if alr
 
 Once devnet (or mainnet, per your launch plan) is live and the smoke test passes, get AgentFund discoverable by agent ecosystems:
 
-- [ ] **mcp.so** — submit the MCP server (`https://mcp.predictbgmi.fun`, discovery file at `/.well-known/mcp.json`).
+- [ ] **mcp.so** — submit the MCP server (`https://mcp.agentfund.online`, discovery file at `/.well-known/mcp.json`).
 - [ ] **Glama** (glama.ai) — submit the MCP server listing.
 - [ ] **Smithery** — register the MCP server for one-click installs into Smithery-compatible clients.
 - [ ] **PulseMCP** — submit for their MCP server directory.
-- [ ] **Composio** — import `https://api.predictbgmi.fun/openapi.json` as an agent tool set.
+- [ ] **Composio** — import `https://api.agentfund.online/openapi.json` as an agent tool set.
 - [ ] **AgentVerse** (Fetch.ai) — submit an agent directory listing pointing at the ACP/MCP endpoints.
 - [ ] **Solana Foundation ecosystem page** — submit AgentFund to the Solana ecosystem projects directory.
 - [ ] Announce launch in relevant AI-agent Discord/X communities (per the spec's roadmap) once the above listings are live, so early agent traffic lands on a platform that's already indexed.
 
-Re-check `https://predictbgmi.fun/.well-known/agent-fund.json`, `/.well-known/mcp.json`, and `/llms.txt` are reachable and valid before submitting to any directory — several of these crawlers fetch and validate the manifest at submission time.
+Re-check `https://agentfund.online/.well-known/agent-fund.json`, `/.well-known/mcp.json`, and `/llms.txt` are reachable and valid before submitting to any directory — several of these crawlers fetch and validate the manifest at submission time.

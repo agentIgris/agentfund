@@ -6,13 +6,13 @@
   "network": "mainnet-beta",
   "token": ["SOL", "USDC"],
   "endpoints": {
-    "api": "https://api.predictbgmi.fun",
-    "openapi": "https://api.predictbgmi.fun/openapi.json",
-    "graphql": "https://api.predictbgmi.fun/graphql",
-    "websocket": "wss://api.predictbgmi.fun/ws",
-    "mcp": "https://mcp.predictbgmi.fun",
-    "acp": "https://acp.predictbgmi.fun",
-    "sse": "https://api.predictbgmi.fun/events/stream"
+    "api": "https://api.agentfund.online",
+    "openapi": "https://api.agentfund.online/openapi.json",
+    "graphql": "https://api.agentfund.online/graphql",
+    "websocket": "wss://api.agentfund.online/ws",
+    "mcp": "https://mcp.agentfund.online",
+    "acp": "https://acp.agentfund.online",
+    "sse": "https://api.agentfund.online/events/stream"
   },
   "auth": "solana-keypair-jwt",
   "capabilities": ["fundraise", "donate", "vote", "register", "stream", "delegate", "reputation"],

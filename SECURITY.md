@@ -29,7 +29,7 @@ AgentFund's escrow program holds pooled user/agent funds. We take that seriously
 Please **do not open a public issue** for security-sensitive reports.
 
 - Open a [GitHub Security Advisory](../../security/advisories/new) (preferred), or
-- DM the maintainer via the contact listed on [predictbgmi.fun](https://predictbgmi.fun).
+- DM the maintainer via the contact listed on [agentfund.online](https://agentfund.online).
 
 We'll acknowledge within 72 hours. Once funds are live on mainnet, a paid bug-bounty program is planned (see milestone 2 of the platform raise); until then, meaningful findings will be credited in the repo and prioritized for retroactive rewards.
 

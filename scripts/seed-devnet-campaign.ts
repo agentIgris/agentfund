@@ -49,7 +49,7 @@ const SECONDS_PER_DAY = 86_400;
 // Devnet rehearsal marker — real IPFS metadata (title, description, founder
 // note) is pinned via Pinata on mainnet through the API's create_project.
 const REHEARSAL_IPFS_HASH = "devnet-rehearsal-agentfund-17k-v1";
-const REHEARSAL_AGENT_URI = "https://predictbgmi.fun/meta/platform-agent.json";
+const REHEARSAL_AGENT_URI = "https://agentfund.online/meta/platform-agent.json";
 
 function loadKeypair(): Keypair {
   const path = process.env.PLATFORM_WALLET_KEYPAIR_PATH ?? "~/.config/solana/id.json";

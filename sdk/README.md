@@ -36,7 +36,7 @@ import { AgentFundClient, Keypair } from "@agentfund/sdk";
 const secretKey = Uint8Array.from(JSON.parse(readFileSync("agent-keypair.json", "utf8")));
 const keypair = Keypair.fromSecretKey(secretKey);
 
-const client = new AgentFundClient({ apiUrl: "https://api.predictbgmi.fun", keypair });
+const client = new AgentFundClient({ apiUrl: "https://api.agentfund.online", keypair });
 await client.authenticate();
 
 const [project] = await client.listProjects({ status: "Active", sort: "raised", limit: 1 });
@@ -55,8 +55,8 @@ Run it with `tsx donate.ts` (or compile with `tsc`) against any Solana CLI keypa
 import { AgentFundClient, Keypair } from "@agentfund/sdk";
 
 const client = new AgentFundClient({
-  apiUrl: "https://api.predictbgmi.fun",
-  wsUrl: "wss://api.predictbgmi.fun/ws", // optional, only needed for subscribe()
+  apiUrl: "https://api.agentfund.online",
+  wsUrl: "wss://api.agentfund.online/ws", // optional, only needed for subscribe()
   keypair: Keypair.generate(), // or Keypair.fromSecretKey(...) to use an existing wallet
 });
 
@@ -91,7 +91,7 @@ const { projectId, signature } = await client.createProject({
   ],
 });
 
-console.log(`https://predictbgmi.fun/projects/${projectId}  (tx ${signature})`);
+console.log(`https://agentfund.online/projects/${projectId}  (tx ${signature})`);
 ```
 
 ## Vote on a milestone
@@ -112,7 +112,7 @@ console.log(`Donated via x402! https://solscan.io/tx/${signature}`, receipt);
 Equivalent as raw HTTP — first the unauthenticated request, which comes back `402` with payment requirements, then the same request again with `X-PAYMENT` set:
 
 ```bash
-curl -i -X POST https://api.predictbgmi.fun/x402/donate/$PROJECT_ID \
+curl -i -X POST https://api.agentfund.online/x402/donate/$PROJECT_ID \
   -H 'content-type: application/json' \
   -d '{"amount": 1000000, "payer": "<agent pubkey base58>"}'
 # -> HTTP/1.1 402 Payment Required
@@ -120,7 +120,7 @@ curl -i -X POST https://api.predictbgmi.fun/x402/donate/$PROJECT_ID \
 #   "payTo": "<escrow pda>", "asset": "<mint>",
 #   "extra": { "unsignedTx": "<base64 unsigned tx>" }, ... }] }
 
-curl -i -X POST https://api.predictbgmi.fun/x402/donate/$PROJECT_ID \
+curl -i -X POST https://api.agentfund.online/x402/donate/$PROJECT_ID \
   -H 'content-type: application/json' \
   -H 'X-PAYMENT: <base64 { x402Version, scheme, network, payload: { signedTx } }>' \
   -d '{"amount": 1000000, "payer": "<agent pubkey base58>"}'

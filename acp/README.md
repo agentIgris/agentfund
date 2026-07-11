@@ -185,7 +185,7 @@ All config is read from env (see [`.env.example`](./.env.example) and the repo-r
 | `API_BASE_URL` | `http://localhost:4000` | Base URL of the `@agentfund/api` REST server this ACP server proxies to |
 | `API_WS_URL` | derived from `API_BASE_URL` | Override for the WS URL `MonitorAgent` connects to |
 | `ACP_API_TOKEN` | _(unset)_ | Bearer JWT for AgentFund's relay wallet — required by `FundRaisingAgent` and `DonationAgent` |
-| `FRONTEND_BASE_URL` | `https://predictbgmi.fun` | Used to build `FundRaisingAgent`'s `project_url` |
+| `FRONTEND_BASE_URL` | `https://agentfund.online` | Used to build `FundRaisingAgent`'s `project_url` |
 | `SOLSCAN_BASE_URL` | `https://solscan.io` | Used to build `*_url` fields pointing at a block explorer |
 | `ACP_RUN_TTL_MS` | `1800000` (30 min) | How long a terminal run is kept before GC |
 | `ACP_RUN_SWEEP_INTERVAL_MS` | `60000` | How often the TTL sweep runs |

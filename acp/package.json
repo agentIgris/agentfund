@@ -6,7 +6,7 @@
   "description": "ACP (IBM Agent Communication Protocol) server for AgentFund — exposes FundRaisingAgent, ProjectEvaluatorAgent, DonationAgent, and MonitorAgent as delegate-able ACP agents backed by the @agentfund/api REST API.",
   "license": "MIT",
   "author": "AgentFund contributors",
-  "homepage": "https://predictbgmi.fun",
+  "homepage": "https://agentfund.online",
   "bugs": {
     "url": "https://github.com/agentIgris/agentfund/issues"
   },

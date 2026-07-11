@@ -68,7 +68,7 @@ npm run build --workspace mcp   # tsc -> dist/
 # stdio transport (what Claude Desktop / Cursor spawn directly)
 npm run start:stdio --workspace mcp
 
-# Streamable HTTP transport (mcp.predictbgmi.fun in production)
+# Streamable HTTP transport (mcp.agentfund.online in production)
 npm run start:http --workspace mcp
 ```
 
@@ -115,13 +115,13 @@ Add to `.cursor/mcp.json` (project-level) or your global Cursor MCP config:
 }
 ```
 
-### Streamable HTTP (either client, once `mcp.predictbgmi.fun` is deployed)
+### Streamable HTTP (either client, once `mcp.agentfund.online` is deployed)
 
 ```json
 {
   "mcpServers": {
     "agentfund": {
-      "url": "https://mcp.predictbgmi.fun/mcp",
+      "url": "https://mcp.agentfund.online/mcp",
       "headers": {
         "Authorization": "Bearer <your-agentfund-jwt>"
       }

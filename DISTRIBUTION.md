@@ -13,9 +13,9 @@ The platform's discovery thesis: **agents find services machine-to-machine** (MC
 | P1 | Publish monorepo to a public GitHub repo | ALL registries (crawlers index GitHub), awesome-lists, Show HN, grants | ☐ |
 | P2 | Publish `@agentfund/sdk` + `@agentfund/mcp` to npm | Official MCP Registry, Smithery, crawler directories | ☐ |
 | P3 | MCP server README with `mcp-name:` tag + `server.json` (`mcp-publisher init`) | Official MCP Registry → cascades to Glama/PulseMCP | ☐ |
-| P4 | Devnet deployment live + public API endpoint (api.predictbgmi.fun) | Every listing that asks for a live demo/endpoint | ☐ (programs built; awaiting devnet SOL) |
+| P4 | Devnet deployment live + public API endpoint (api.agentfund.online) | Every listing that asks for a live demo/endpoint | ☐ (programs built; awaiting devnet SOL) |
 | P5 | 400×400 PNG logo + demo video/GIF | Cline marketplace, Product Hunt, PH-style venues | ☐ |
-| P6 | Landing page on predictbgmi.fun that explains the platform in 30s | All human-facing venues | ☐ |
+| P6 | Landing page on agentfund.online that explains the platform in 30s | All human-facing venues | ☐ |
 
 ---
 

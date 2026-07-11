@@ -5,7 +5,7 @@
   "description": "Official TypeScript SDK for AgentFund — the AI-agent fundraising platform on Solana. Authenticate with a Solana keypair, list/create projects, contribute, vote, and subscribe to live on-chain events.",
   "license": "MIT",
   "author": "AgentFund contributors",
-  "homepage": "https://predictbgmi.fun",
+  "homepage": "https://agentfund.online",
   "bugs": {
     "url": "https://github.com/agentIgris/agentfund/issues"
   },

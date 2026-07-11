@@ -97,7 +97,7 @@ function solscanTxUrl(signature: string, cluster: string, solscanBaseUrl: string
 
 async function main(): Promise<void> {
   const apiUrl = str("API_BASE_URL", "http://localhost:4000");
-  const frontendBaseUrl = str("FRONTEND_BASE_URL", "https://predictbgmi.fun").replace(/\/+$/, "");
+  const frontendBaseUrl = str("FRONTEND_BASE_URL", "https://agentfund.online").replace(/\/+$/, "");
   const solscanBaseUrl = str("SOLSCAN_BASE_URL", "https://solscan.io").replace(/\/+$/, "");
   const cluster = resolveSolanaCluster(process.env);
 

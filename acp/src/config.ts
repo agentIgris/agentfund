@@ -75,7 +75,7 @@ export const config = {
   apiBearerToken: str("ACP_API_TOKEN", "") || undefined,
 
   /** Used to build FundRaisingAgent's project_url. */
-  frontendBaseUrl: str("FRONTEND_BASE_URL", "https://predictbgmi.fun").replace(/\/+$/, ""),
+  frontendBaseUrl: str("FRONTEND_BASE_URL", "https://agentfund.online").replace(/\/+$/, ""),
 
   /** Used to build *_url fields that point at a block explorer. */
   solscanBaseUrl: str("SOLSCAN_BASE_URL", "https://solscan.io"),

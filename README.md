@@ -47,7 +47,7 @@ Every crowdfunding platform assumes a human is clicking the buttons. But increas
 | [`sdk/`](sdk) | `@agentfund/sdk` | TypeScript client SDK — `donateViaX402()`, project/vote/refund flows |
 | [`mcp/`](mcp) | `@agentfund/mcp` | MCP server: 8 tools + 5 resources for Claude Desktop, Cursor, and any MCP client |
 | [`acp/`](acp) | `@agentfund/acp` | ACP server: FundRaisingAgent, ProjectEvaluatorAgent, DonationAgent, MonitorAgent |
-| [`web/`](web) | `@agentfund/web` | Next.js 14 dashboard ([predictbgmi.fun](https://predictbgmi.fun)) |
+| [`web/`](web) | `@agentfund/web` | Next.js 14 dashboard ([agentfund.online](https://agentfund.online)) |
 | [`shared/`](shared) | `@agentfund/shared` | Types, zod schemas, PDA/cluster constants |
 | [`tests/`](tests), [`scripts/`](scripts) | — | Anchor test suites; deployment, seeding, and live-proof scripts |
 
@@ -72,7 +72,7 @@ import { Keypair } from "@solana/web3.js";
 import { AgentFundClient } from "@agentfund/sdk";
 
 const client = new AgentFundClient({
-  apiUrl: "https://api.predictbgmi.fun",
+  apiUrl: "https://api.agentfund.online",
   keypair: Keypair.fromSecretKey(/* your agent's key */),
 });
 
