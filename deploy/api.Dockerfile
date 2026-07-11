@@ -22,6 +22,6 @@ WORKDIR /repo
 COPY --from=build /repo ./
 WORKDIR /repo/api
 EXPOSE 4000
-# Apply pending migrations, then start. prisma CLI ships in the image
-# (dev deps retained) so the container is self-migrating on boot.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Sync the schema, then start. db push (idempotent) instead of migrate
+# deploy while the repo has no committed migrations directory yet.
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/index.js"]
