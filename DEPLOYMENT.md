@@ -23,7 +23,30 @@ See the [README](README.md) for the architecture this runbook deploys.
 
 Campaign terms: 17,000 USDC goal (devnet USDC `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`), 45-day deadline, 4 milestones. Seeded with `scripts/seed-devnet-campaign.ts` (direct instruction builders; the mainnet campaign will go through the API + IPFS pinning via `scripts/seed-first-campaign.ts`).
 
-### Devnet x402 smoke test — attempted 2026-07-11 — BLOCKED (no devnet USDC)
+### Devnet x402 smoke test — PASSED 2026-07-11 ✅
+
+Two real x402 donations settled against the live production API (`https://api.agentfund.online`)
+from wallet `DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE` (funded 20 USDC via https://faucet.circle.com),
+using the full protocol flow — bare request → HTTP 402 challenge → sign the offered
+transaction locally → resubmit with `X-PAYMENT` → settle → `X-PAYMENT-RESPONSE` receipt:
+
+| # | Amount | Settle time | Signature |
+|---|---|---|---|
+| 1 | 5 USDC | 2.4 s | [`2io682CF…YvZYy7L`](https://explorer.solana.com/tx/2io682CFt8jk2MGhm6maBAJh7LexFxeLEoCwmB3WtiehWJGyh9mpD3stMFuzj3xGZDQG2Z2GTPAhfvcFPYvZYy7L?cluster=devnet) |
+| 2 | 5 USDC | 2.6 s | [`3Rvh1UMt…RMtfNtZT`](https://explorer.solana.com/tx/3Rvh1UMtT2TVk4uZtvd2D51T1zG62yao9A1SnhPT2KiEFD8KmCbFJvTsrvowZB3dph7xMfKVjUbTg9eaRMtfNtZT?cluster=devnet) |
+
+The Helius webhook → Postgres indexer path was also confirmed live: `raisedAmount` on
+`GET /projects/9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H` reflected each donation within
+~5 seconds of settlement. Runner: `scripts/smoke-x402-devnet.ts` (uses the published SDK's
+`donateViaX402()` against the production API — no local infra needed).
+
+One production fix came out of run #1: the settlement receipt reported
+`"network": "solana-localnet"` because `X402_NETWORK` was unset on the server (the code
+defaults to localnet). Set `X402_NETWORK=solana-devnet` in `deploy/.env`; run #2's receipt
+reports the correct network.
+
+<details>
+<summary>Original blocker record (resolved) — attempted 2026-07-11, BLOCKED (no devnet USDC)</summary>
 
 Goal: prove one real paid donation against the live devnet deployment (project PDA `9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H`, escrow PDA `AsfYmmyw6uMhshEJtAXPRT3G5qgFCfB3c54n42ErZcCy`, escrow USDC ATA `HUogrZJGWoPg4DFjtDfo2HpFLfv8Hxd5wFjNsFjBu83P`) using the existing `scripts/prove-x402-live.ts` E2E flow (previously 9/9 passing on a local validator, per `LOCAL_VALIDATOR.md`).
 
@@ -42,6 +65,8 @@ Goal: prove one real paid donation against the live devnet deployment (project P
 3. Reuse (don't rewrite) `scripts/prove-x402-live.ts` as the template for a small (≤1 USDC) donation against the existing project/escrow PDAs above instead of a freshly-generated project — or adapt its `donateViaX402()` call directly against the live API with `amount: 1_000_000` (1 USDC, 6 decimals) and `projectId: "9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H"`.
 4. Verify on-chain: compare `spl-token balance HUogrZJGWoPg4DFjtDfo2HpFLfv8Hxd5wFjNsFjBu83P --url https://api.devnet.solana.com` before/after, and confirm the returned tx signature at `https://solscan.io/tx/<sig>?cluster=devnet`.
 5. Append the resulting tx signature, explorer link, and amount to this section, and kill any servers started for the test.
+
+</details>
 
 ### Mainnet — not yet deployed
 
