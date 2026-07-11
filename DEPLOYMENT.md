@@ -45,6 +45,17 @@ One production fix came out of run #1: the settlement receipt reported
 defaults to localnet). Set `X402_NETWORK=solana-devnet` in `deploy/.env`; run #2's receipt
 reports the correct network.
 
+A second, worse bug came out of run #2: its **live** Helius delivery was accepted (HTTP 200)
+but never indexed. Raw Helius payloads carry the signature at `transaction.signatures[0]`,
+not top-level; the parser fell back to `""`, so both runs' events collapsed onto one
+`(signature="", eventName)` dedup key — run #1 indexed under the empty key, run #2 was
+silently skipped (replay scripts send a top-level signature, which is why replaying worked
+and masked it). Fixed in commit `f29d32d`: proper signature extraction, the receiver
+refuses empty-signature events, and a failed dispatch un-marks the event so redelivery can
+retry. Verified live with a third donation
+([`5Py5GUaJ…eMokLcUK`](https://explorer.solana.com/tx/5Py5GUaJ3n6ZSDzpoUk1mddM2XHKWuZJi3oCJLgLAuotKAs8dv5x5BH71Ai1BWDreRzNQ121rZsoeaLReMokLcUK?cluster=devnet),
+1 USDC) indexed by the real webhook path — no replay — within ~5 s.
+
 <details>
 <summary>Original blocker record (resolved) — attempted 2026-07-11, BLOCKED (no devnet USDC)</summary>
 
