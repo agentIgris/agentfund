@@ -28,6 +28,7 @@ function allowedProgramIds(): Set<string> {
 }
 import { getConnection, buildUnsignedTransactionBase64 } from "../services/solana.js";
 import {
+  buildContributeForIx,
   buildContributeIx,
   buildCreateProjectIx,
   buildInitializeEscrowIx,
@@ -149,6 +150,25 @@ export function registerTxRoutes(app: FastifyInstance): void {
         if (!project) return reply.code(404).send({ error: "project_not_found" });
         const ix = buildContributeIx({
           contributor: feePayer,
+          project: new PublicKey(project.id),
+          tokenMint: new PublicKey(project.tokenMint),
+          amount: body.amount,
+        });
+        const unsignedTx = await buildUnsignedTransactionBase64([ix], feePayer);
+        return reply.send({ unsignedTx });
+      }
+
+      case "contribute_for": {
+        const parsed = txBuildBodySchemas.contribute_for.safeParse(request.body);
+        if (!parsed.success) return reply.code(400).send({ error: "invalid_request", details: parsed.error.flatten() });
+        const body = parsed.data;
+        const project = await prisma.project.findUnique({ where: { id: body.projectId } });
+        if (!project) return reply.code(404).send({ error: "project_not_found" });
+        // Fee payer funds the contribution; the credit (vote weight, refund
+        // rights) goes to `beneficiary` — the x402 settlement path.
+        const ix = buildContributeForIx({
+          payer: feePayer,
+          beneficiary: new PublicKey(body.beneficiary),
           project: new PublicKey(project.id),
           tokenMint: new PublicKey(project.tokenMint),
           amount: body.amount,

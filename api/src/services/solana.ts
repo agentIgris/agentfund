@@ -251,6 +251,10 @@ export function buildInitializeEscrowIx(params: InitializeEscrowParams): Transac
       { pubkey: params.payer, isSigner: true, isWritable: true },
       { pubkey: params.creator, isSigner: true, isWritable: false },
       { pubkey: escrow, isSigner: false, isWritable: true },
+      // The registry ProjectAccount IS the project pubkey — the program
+      // verifies its owner/discriminator and that every escrow term matches
+      // the registered project (finding #3, on-chain binding).
+      { pubkey: params.project, isSigner: false, isWritable: false },
       { pubkey: mint, isSigner: false, isWritable: false },
       { pubkey: escrowAta, isSigner: false, isWritable: true },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -297,6 +301,46 @@ export function buildContributeIx(params: ContributeParams): TransactionInstruct
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     ],
     data: buildInstructionData("contribute", [
+      encodePubkey(params.project),
+      encodeU64(params.amount),
+    ]),
+  });
+}
+
+export interface ContributeForParams {
+  /** Funds source + rent payer (e.g. the x402 facilitator / platform treasury). */
+  payer: PublicKey;
+  /** Wallet credited with the contribution (vote weight, refund rights). */
+  beneficiary: PublicKey;
+  project: PublicKey;
+  tokenMint: PublicKey;
+  amount: bigint | number;
+}
+
+export function buildContributeForIx(params: ContributeForParams): TransactionInstruction {
+  const [escrow] = deriveEscrowPda(params.project);
+  const [contribution] = deriveContributionPda(params.project, params.beneficiary);
+  const escrowProgram = programId("escrow");
+  const native = isNativeSol(params.tokenMint);
+
+  const payerAta = native
+    ? escrowProgram
+    : getAssociatedTokenAddress(params.tokenMint, params.payer);
+  const escrowAta = native ? escrowProgram : getAssociatedTokenAddress(params.tokenMint, escrow);
+
+  return new TransactionInstruction({
+    programId: escrowProgram,
+    keys: [
+      { pubkey: escrow, isSigner: false, isWritable: true },
+      { pubkey: contribution, isSigner: false, isWritable: true },
+      { pubkey: params.payer, isSigner: true, isWritable: true },
+      { pubkey: params.beneficiary, isSigner: false, isWritable: false },
+      { pubkey: payerAta, isSigner: false, isWritable: true },
+      { pubkey: escrowAta, isSigner: false, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: buildInstructionData("contribute_for", [
       encodePubkey(params.project),
       encodeU64(params.amount),
     ]),

@@ -28,6 +28,8 @@ use anchor_spl::associated_token::{self, AssociatedToken};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer as TokenTransfer};
 use std::str::FromStr;
 
+use agent_registry::ProjectAccount;
+
 // Placeholder program id — replaced with the value of ESCROW_PROGRAM_ID
 // (env) once deployed. Keep in sync with Anchor.toml.
 declare_id!("HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz");
@@ -84,12 +86,21 @@ pub mod escrow {
         // SECURITY: `creator` is NOT a free instruction argument — it is bound
         // to the `creator` signer, so the address that later receives every
         // milestone payout must have authorized this escrow's creation.
-        // TODO(integration, pre-mainnet): additionally bind `project`,
-        // `goal_amount`, `deadline`, `milestone_count` to the registry's
-        // ProjectAccount (via CPI from agent_registry::create_project, or by
-        // verifying a passed-in registry account owned by REGISTRY_PROGRAM_ID)
-        // so a third party cannot front-run the [ESCROW_SEED, project] slot
-        // with mismatched terms. See REVIEW_FINDINGS.md #3 / #9.
+        //
+        // SECURITY (#3): escrow terms are additionally bound on-chain to the
+        // registry's ProjectAccount. `Account<ProjectAccount>` already
+        // enforced owner == agent_registry::ID + the account discriminator;
+        // here we require the account to BE the project and every term to
+        // match it exactly, so nobody — not even through a non-AgentFund
+        // client — can claim the [ESCROW_SEED, project] slot with terms that
+        // differ from what the creator registered.
+        let rp = &ctx.accounts.registry_project;
+        require_keys_eq!(rp.key(), project, EscrowError::RegistryProjectMismatch);
+        require_keys_eq!(rp.creator, ctx.accounts.creator.key(), EscrowError::InvalidCreator);
+        require!(rp.goal_amount == goal_amount, EscrowError::TermsMismatch);
+        require!(rp.deadline == deadline, EscrowError::TermsMismatch);
+        require!(rp.milestone_count == milestone_count, EscrowError::TermsMismatch);
+        require_keys_eq!(rp.token_mint, token_mint, EscrowError::TermsMismatch);
         let escrow = &mut ctx.accounts.escrow;
         escrow.project = project;
         escrow.creator = ctx.accounts.creator.key();
@@ -225,6 +236,108 @@ pub mod escrow {
         emit!(ContributionMade {
             project,
             contributor: ctx.accounts.contributor.key(),
+            amount,
+            total_deposited: escrow.total_deposited,
+            timestamp: now,
+        });
+
+        Ok(())
+    }
+
+    /// contribute_for(amount): like `contribute`, but the funds come from
+    /// `payer` while the contribution credit (vote weight, refund rights,
+    /// reputation) goes to `beneficiary`. This is the x402 settlement path:
+    /// a facilitator or platform treasury settles an agent's payment and
+    /// the agent — not the facilitator — becomes the on-chain contributor.
+    /// Refunds of this credit are claimable only by `beneficiary`.
+    pub fn contribute_for(ctx: Context<ContributeFor>, project: Pubkey, amount: u64) -> Result<()> {
+        require!(amount > 0, EscrowError::InvalidAmount);
+        require_keys_eq!(ctx.accounts.escrow.project, project, EscrowError::ProjectMismatch);
+
+        let now = Clock::get()?.unix_timestamp;
+        require!(
+            ctx.accounts.escrow.status == CampaignStatus::Active,
+            EscrowError::CampaignNotActive
+        );
+        require!(now < ctx.accounts.escrow.deadline, EscrowError::DeadlinePassed);
+
+        if ctx.accounts.escrow.token_mint == native_sol_mint() {
+            let cpi_accounts = SystemTransfer {
+                from: ctx.accounts.payer.to_account_info(),
+                to: ctx.accounts.escrow.to_account_info(),
+            };
+            let cpi_ctx =
+                CpiContext::new(ctx.accounts.system_program.to_account_info(), cpi_accounts);
+            system_program::transfer(cpi_ctx, amount)?;
+        } else {
+            let payer_ata = ctx
+                .accounts
+                .payer_ata
+                .as_ref()
+                .ok_or(EscrowError::MissingTokenAccounts)?;
+            let escrow_ata = ctx
+                .accounts
+                .escrow_ata
+                .as_ref()
+                .ok_or(EscrowError::MissingTokenAccounts)?;
+
+            let payer_ata_data =
+                TokenAccount::try_deserialize(&mut &payer_ata.data.borrow()[..])?;
+            let escrow_ata_data =
+                TokenAccount::try_deserialize(&mut &escrow_ata.data.borrow()[..])?;
+            require_keys_eq!(
+                payer_ata_data.mint,
+                ctx.accounts.escrow.token_mint,
+                EscrowError::InvalidMint
+            );
+            require_keys_eq!(
+                payer_ata_data.owner,
+                ctx.accounts.payer.key(),
+                EscrowError::InvalidTokenAccount
+            );
+            require_keys_eq!(
+                escrow_ata_data.mint,
+                ctx.accounts.escrow.token_mint,
+                EscrowError::InvalidMint
+            );
+            require_keys_eq!(
+                escrow_ata_data.owner,
+                ctx.accounts.escrow.key(),
+                EscrowError::InvalidTokenAccount
+            );
+
+            let cpi_accounts = TokenTransfer {
+                from: payer_ata.to_account_info(),
+                to: escrow_ata.to_account_info(),
+                authority: ctx.accounts.payer.to_account_info(),
+            };
+            let cpi_ctx =
+                CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+            token::transfer(cpi_ctx, amount)?;
+        }
+
+        let escrow = &mut ctx.accounts.escrow;
+        escrow.total_deposited = escrow
+            .total_deposited
+            .checked_add(amount)
+            .ok_or(EscrowError::MathOverflow)?;
+
+        let contribution = &mut ctx.accounts.contribution;
+        if contribution.contributor == Pubkey::default() {
+            contribution.contributor = ctx.accounts.beneficiary.key();
+            contribution.project = project;
+            contribution.amount = 0;
+            contribution.bump = ctx.bumps.contribution;
+        }
+        contribution.amount = contribution
+            .amount
+            .checked_add(amount)
+            .ok_or(EscrowError::MathOverflow)?;
+        contribution.timestamp = now;
+
+        emit!(ContributionMade {
+            project,
+            contributor: ctx.accounts.beneficiary.key(),
             amount,
             total_deposited: escrow.total_deposited,
             timestamp: now,
@@ -704,6 +817,11 @@ pub struct InitializeEscrow<'info> {
     )]
     pub escrow: Account<'info, EscrowAccount>,
 
+    /// The agent_registry ProjectAccount this escrow funds. Owner +
+    /// discriminator are enforced by `Account`; the handler additionally
+    /// requires its key to equal `project` and all terms to match it.
+    pub registry_project: Account<'info, ProjectAccount>,
+
     /// SPL-only: the project's mint. `None` for native SOL campaigns.
     pub mint: Option<UncheckedAccount<'info>>,
 
@@ -743,6 +861,46 @@ pub struct Contribute<'info> {
     /// native SOL contributions.
     #[account(mut)]
     pub contributor_ata: Option<UncheckedAccount<'info>>,
+
+    /// SPL-only: escrow's ATA. `None` for native SOL contributions.
+    #[account(mut)]
+    pub escrow_ata: Option<UncheckedAccount<'info>>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(project: Pubkey)]
+pub struct ContributeFor<'info> {
+    #[account(
+        mut,
+        seeds = [ESCROW_SEED, project.as_ref()],
+        bump = escrow.bump,
+    )]
+    pub escrow: Account<'info, EscrowAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8 + ContributionAccount::LEN,
+        seeds = [CONTRIBUTION_SEED, project.as_ref(), beneficiary.key().as_ref()],
+        bump,
+    )]
+    pub contribution: Account<'info, ContributionAccount>,
+
+    /// Funds source — pays the contribution and any account rent.
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    /// CHECK: pure identity — the wallet credited with this contribution
+    /// (contribution PDA seed, vote weight, refund recipient). Never read
+    /// or written by this instruction.
+    pub beneficiary: UncheckedAccount<'info>,
+
+    /// SPL-only: payer's ATA for `escrow.token_mint`. `None` for native SOL.
+    #[account(mut)]
+    pub payer_ata: Option<UncheckedAccount<'info>>,
 
     /// SPL-only: escrow's ATA. `None` for native SOL contributions.
     #[account(mut)]
@@ -906,4 +1064,8 @@ pub enum EscrowError {
     MissingTokenAccounts,
     #[msg("Checked math overflow or underflow")]
     MathOverflow,
+    #[msg("Supplied registry project account is not the requested project")]
+    RegistryProjectMismatch,
+    #[msg("Escrow terms do not match the registered project's terms")]
+    TermsMismatch,
 }

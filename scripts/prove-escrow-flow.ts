@@ -36,6 +36,7 @@ import {
 } from "@solana/web3.js";
 import { NATIVE_SOL_MINT } from "@agentfund/shared";
 import {
+  buildContributeForIx,
   buildContributeIx,
   buildCreateProjectIx,
   buildInitializeEscrowIx,
@@ -170,6 +171,23 @@ async function main(): Promise<void> {
     alice,
   );
   pass("contribute 1 SOL to campaign B (alice)");
+
+  // x402 settlement path: mallory (facilitator) PAYS, dave gets the CREDIT.
+  const dave = Keypair.generate();
+  await airdrop(dave.publicKey, 0.2); // fee money only — dave never deposits
+  await sendTx(
+    [
+      buildContributeForIx({
+        payer: mallory.publicKey,
+        beneficiary: dave.publicKey,
+        project: projectB,
+        tokenMint: NATIVE_MINT,
+        amount: 0.5 * SOL,
+      }),
+    ],
+    mallory,
+  );
+  pass("contribute_for: mallory pays 0.5 SOL, credit to dave (x402 settlement path)");
 
   await expectFail("refund BEFORE deadline is rejected (campaign B)", ["DeadlineNotPassed", "0x177c", "custom program error"], () =>
     sendTx([buildRefundIx({ contributor: alice.publicKey, project: projectB, tokenMint: NATIVE_MINT })], alice),
@@ -320,6 +338,79 @@ async function main(): Promise<void> {
     ),
   );
 
+  // ── Campaign C: on-chain #3 binding — escrow slot cannot be front-run ──
+  const [projectC] = deriveProjectPda(creator.publicKey, 2);
+  await sendTx(
+    [
+      buildCreateProjectIx({
+        creator: creator.publicKey,
+        projectIndex: 2,
+        ipfsHash: "QmProofCampaignC",
+        goalAmount: 3 * SOL,
+        tokenMint: NATIVE_MINT,
+        deadline: now + 3600,
+        milestoneCount: 1,
+      }),
+    ],
+    creator,
+  );
+
+  // mallory tries to claim the escrow slot for creator’s project — the
+  // program binds escrow.creator to the signer AND checks it against the
+  // registry ProjectAccount’s recorded creator.
+  await expectFail("escrow front-run by non-creator is rejected", ["InvalidCreator"], () =>
+    sendTx(
+      [
+        buildInitializeEscrowIx({
+          payer: mallory.publicKey,
+          creator: mallory.publicKey,
+          project: projectC,
+          goalAmount: 3 * SOL,
+          deadline: now + 3600,
+          milestoneCount: 1,
+          tokenMint: NATIVE_MINT,
+        }),
+      ],
+      mallory,
+    ),
+  );
+
+  // even the real creator cannot initialize the escrow with terms that
+  // differ from what was registered (here: goal 1 SOL instead of 3).
+  await expectFail("escrow init with mismatched terms is rejected", ["TermsMismatch"], () =>
+    sendTx(
+      [
+        buildInitializeEscrowIx({
+          payer: creator.publicKey,
+          creator: creator.publicKey,
+          project: projectC,
+          goalAmount: 1 * SOL,
+          deadline: now + 3600,
+          milestoneCount: 1,
+          tokenMint: NATIVE_MINT,
+        }),
+      ],
+      creator,
+    ),
+  );
+
+  // with the exact registered terms it succeeds.
+  await sendTx(
+    [
+      buildInitializeEscrowIx({
+        payer: creator.publicKey,
+        creator: creator.publicKey,
+        project: projectC,
+        goalAmount: 3 * SOL,
+        deadline: now + 3600,
+        milestoneCount: 1,
+        tokenMint: NATIVE_MINT,
+      }),
+    ],
+    creator,
+  );
+  pass("escrow init with exact registered terms succeeds (on-chain #3 binding)");
+
   // ── Campaign B failure path: deadline passes with goal unmet ──
   const waitMs = (deadlineB + 3) * 1000 - Date.now();
   if (waitMs > 0) {
@@ -352,6 +443,18 @@ async function main(): Promise<void> {
   await expectFail("double refund is rejected", ["NothingToRefund", "AccountNotInitialized", "0xbc4"], () =>
     sendTx([buildRefundIx({ contributor: alice.publicKey, project: projectB, tokenMint: NATIVE_MINT })], alice),
   );
+
+  // The x402 credit belongs to dave, NOT to the wallet that paid.
+  await expectFail("payer cannot claim beneficiary's refund (mallory)", ["AccountNotInitialized", "0xbc4"], () =>
+    sendTx([buildRefundIx({ contributor: mallory.publicKey, project: projectB, tokenMint: NATIVE_MINT })], mallory),
+  );
+  const daveBefore = await conn.getBalance(dave.publicKey);
+  await sendTx([buildRefundIx({ contributor: dave.publicKey, project: projectB, tokenMint: NATIVE_MINT })], dave);
+  const daveAfter = await conn.getBalance(dave.publicKey);
+  const daveRefund = daveAfter - daveBefore;
+  if (daveRefund >= 0.5 * SOL - 10_000)
+    pass("beneficiary claims x402-settled refund", `dave +${(daveRefund / SOL).toFixed(4)} SOL despite never depositing himself`);
+  else fail("beneficiary refund", `dave only got back ${daveRefund}`);
 
   // ── summary ──────────────────────────────────────────────────
   console.log(`\n${"─".repeat(60)}`);

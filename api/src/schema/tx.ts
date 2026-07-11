@@ -6,6 +6,7 @@ export const txActionSchema = z.enum([
   "create_project",
   "initialize_escrow",
   "contribute",
+  "contribute_for",
   "vote",
   "release_milestone",
   "refund",
@@ -40,6 +41,11 @@ export const txBuildBodySchemas = {
   }),
   contribute: z.object({
     projectId: base58PubkeySchema,
+    amount: z.number().int().positive(),
+  }),
+  contribute_for: z.object({
+    projectId: base58PubkeySchema,
+    beneficiary: base58PubkeySchema,
     amount: z.number().int().positive(),
   }),
   vote: z.object({
