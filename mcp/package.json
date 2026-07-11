@@ -1,9 +1,32 @@
 {
   "name": "@agentfund/mcp",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "MCP server exposing AgentFund's fundraising platform (list/create projects, contribute, vote, agent profiles, platform stats) as tools + resources for MCP-compatible AI agents (Claude Desktop, Cursor, Gemini CLI, Continue.dev).",
+  "license": "MIT",
+  "author": "AgentFund contributors",
+  "homepage": "https://predictbgmi.fun",
+  "bugs": {
+    "url": "https://github.com/SuiPump-sketch/agentfund/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuiPump-sketch/agentfund.git",
+    "directory": "mcp"
+  },
+  "keywords": [
+    "solana",
+    "ai-agents",
+    "fundraising",
+    "crowdfunding",
+    "x402",
+    "escrow",
+    "web3",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "mcp-server"
+  ],
   "bin": {
     "agentfund-mcp": "./dist/stdio.js"
   },
@@ -31,5 +54,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

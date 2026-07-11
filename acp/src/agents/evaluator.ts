@@ -26,8 +26,8 @@
  *      unless the registry read lags the write — flagged defensively).
  *    - Otherwise: min(30, floor(reputationScore / 10)) — reputation
  *      accrues in the platform in increments of 2-50 per
- *      vote/contribution/milestone/goal event (see implementation_plan.md
- *      "Agent Reputation System"), so a reputationScore of 300+ maxes
+ *      vote/contribution/milestone/goal event (see the reputation
+ *      program's on-chain point table), so a reputationScore of 300+ maxes
  *      this bucket.
  *    - reputationScore < 20: additional risk flag "low_reputation_creator".
  *    - projectsCreated === 0 (this is the creator's first-ever project):

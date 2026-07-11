@@ -2,7 +2,30 @@
 
 This is the operational runbook for taking AgentFund from a clean checkout to a live, agent-discoverable platform. Follow it in order — **devnet first, always** — the three Anchor programs (`agent_registry`, `escrow`, `reputation`) are custom and unaudited; do not point real USDC volume at a mainnet deployment until the audit note in [Step 3](#3-promote-to-mainnet-beta) is addressed.
 
-See `implementation_plan.md` (repo root) for the full architecture this runbook deploys.
+See the [README](README.md) for the architecture this runbook deploys.
+
+---
+
+## Live deployment record
+
+### Devnet — deployed 2026-07-11
+
+| Component | Address / signature |
+|---|---|
+| `agent_registry` | `2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA` |
+| `escrow` | `HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz` |
+| `reputation` | `7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7` |
+| Reputation `Config` PDA | `HV7S2xjFBxJtYqseWq9pPxYPsjKPp3aEEYutFLy1jaGQ` |
+| Platform campaign — project PDA | `9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H` |
+| Platform campaign — escrow PDA | `AsfYmmyw6uMhshEJtAXPRT3G5qgFCfB3c54n42ErZcCy` |
+| Platform campaign — escrow USDC ATA | `HUogrZJGWoPg4DFjtDfo2HpFLfv8Hxd5wFjNsFjBu83P` |
+| Campaign creation tx (project + escrow, atomic) | [`2TJiKt6X…XoSNVu`](https://solscan.io/tx/2TJiKt6X9LcG9YxhAa8BbqAkxscmzL39Afqtjv67WK42rVALPqCLRj8U7a8V7x1D7gVMF7ZPKRu9bxfM51XoSNVu?cluster=devnet) |
+
+Campaign terms: 17,000 USDC goal (devnet USDC `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`), 45-day deadline, 4 milestones. Seeded with `scripts/seed-devnet-campaign.ts` (direct instruction builders; the mainnet campaign will go through the API + IPFS pinning via `scripts/seed-first-campaign.ts`).
+
+### Mainnet — not yet deployed
+
+Blocked on the external escrow audit and deposit-cap work described in [Step 3](#3-promote-to-mainnet-beta).
 
 ---
 

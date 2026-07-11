@@ -1,6 +1,6 @@
 /**
- * Anchor test suite for the `escrow` program (Program 2 per
- * implementation_plan.md). Exercises the SPL-token path end to end
+ * Anchor test suite for the `escrow` program.
+ * Exercises the SPL-token path end to end
  * (a locally-minted token standing in for USDC) against a project
  * identifier that is just an opaque `Pubkey` — this program does not
  * depend on `agent_registry` being deployed (see the design note atop

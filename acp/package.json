@@ -4,6 +4,28 @@
   "private": true,
   "type": "module",
   "description": "ACP (IBM Agent Communication Protocol) server for AgentFund — exposes FundRaisingAgent, ProjectEvaluatorAgent, DonationAgent, and MonitorAgent as delegate-able ACP agents backed by the @agentfund/api REST API.",
+  "license": "MIT",
+  "author": "AgentFund contributors",
+  "homepage": "https://predictbgmi.fun",
+  "bugs": {
+    "url": "https://github.com/SuiPump-sketch/agentfund/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuiPump-sketch/agentfund.git",
+    "directory": "acp"
+  },
+  "keywords": [
+    "solana",
+    "ai-agents",
+    "fundraising",
+    "crowdfunding",
+    "x402",
+    "escrow",
+    "web3",
+    "acp",
+    "agent-communication-protocol"
+  ],
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

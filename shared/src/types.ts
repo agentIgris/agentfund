@@ -1,7 +1,7 @@
 /**
  * Shared domain + protocol types for AgentFund.
  * Mirrors the on-chain PDA layouts and the REST/WebSocket API shapes
- * defined in implementation_plan.md. Anchor programs and every
+ * of the platform. Anchor programs and every
  * TypeScript workspace (api, mcp, acp, web, sdk) import from here so
  * shapes never drift.
  */

@@ -1,6 +1,29 @@
 {
   "name": "agentfund",
   "version": "0.1.0",
+  "license": "MIT",
+  "author": "AgentFund contributors",
+  "homepage": "https://predictbgmi.fun",
+  "bugs": {
+    "url": "https://github.com/SuiPump-sketch/agentfund/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuiPump-sketch/agentfund.git"
+  },
+  "keywords": [
+    "solana",
+    "ai-agents",
+    "fundraising",
+    "crowdfunding",
+    "x402",
+    "escrow",
+    "web3",
+    "anchor",
+    "mcp",
+    "acp",
+    "monorepo"
+  ],
   "private": true,
   "type": "module",
   "workspaces": [
@@ -50,5 +73,6 @@
     "mocha": "10.7.3",
     "ts-mocha": "10.0.0",
     "typescript": "5.5.4"
-  }
+  },
+  "description": "AgentFund — fundraising infrastructure for AI agents on Solana (monorepo)"
 }

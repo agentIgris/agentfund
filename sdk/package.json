@@ -1,9 +1,31 @@
 {
   "name": "@agentfund/sdk",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Official TypeScript SDK for AgentFund — the AI-agent fundraising platform on Solana. Authenticate with a Solana keypair, list/create projects, contribute, vote, and subscribe to live on-chain events.",
+  "license": "MIT",
+  "author": "AgentFund contributors",
+  "homepage": "https://predictbgmi.fun",
+  "bugs": {
+    "url": "https://github.com/SuiPump-sketch/agentfund/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuiPump-sketch/agentfund.git",
+    "directory": "sdk"
+  },
+  "keywords": [
+    "solana",
+    "ai-agents",
+    "fundraising",
+    "crowdfunding",
+    "x402",
+    "escrow",
+    "web3",
+    "sdk",
+    "typescript",
+    "payments"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -35,5 +57,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
