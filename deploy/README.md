@@ -35,3 +35,20 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 `deploy/.env` (filled) and `deploy/secrets/` are gitignored — they hold the
 RPC key, JWT secret, DB password, and the platform wallet keypair.
+
+## Hosted endpoints
+
+| Service                | URL                                | Notes                                   |
+| ---------------------- | ----------------------------------- | ---------------------------------------- |
+| REST + WebSocket API   | https://api.agentfund.online        | `/ws` for WebSocket, `/openapi.json`     |
+| MCP (StreamableHTTP)   | https://mcp.agentfund.online        | `POST /mcp`, `GET /healthz`              |
+| ACP                    | https://acp.agentfund.online        | `GET /agents`, `GET /health`, `POST /runs` |
+| Dashboard (Next.js)    | https://app.agentfund.online        | Deployed on Vercel                       |
+| Landing page           | https://agentfund.online            | GitHub Pages (`main:/docs`)              |
+
+`mcp` and `acp` run as additional services in `docker-compose.prod.yml`,
+built from `deploy/mcp.Dockerfile` / `deploy/acp.Dockerfile` (same
+workspace-aware multi-stage pattern as `deploy/api.Dockerfile`, minus
+Prisma) and reverse-proxied by Caddy at `mcp.agentfund.online` /
+`acp.agentfund.online`. Both talk to the API over the compose-internal
+network at `http://api:4000` rather than the public hostname.

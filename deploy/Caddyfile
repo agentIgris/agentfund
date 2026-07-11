@@ -4,3 +4,13 @@ api.agentfund.online {
 	encode gzip
 	reverse_proxy api:4000
 }
+
+mcp.agentfund.online {
+	encode gzip
+	reverse_proxy mcp:3002
+}
+
+acp.agentfund.online {
+	encode gzip
+	reverse_proxy acp:3003
+}

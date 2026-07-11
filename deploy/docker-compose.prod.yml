@@ -55,6 +55,41 @@ services:
     expose:
       - "4000"
 
+  mcp:
+    build:
+      context: ..
+      dockerfile: deploy/mcp.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      MCP_HTTP_HOST: 0.0.0.0
+      MCP_HTTP_PORT: "3002"
+      API_BASE_URL: http://api:4000
+    depends_on:
+      - api
+    expose:
+      - "3002"
+
+  acp:
+    build:
+      context: ..
+      dockerfile: deploy/acp.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      ACP_HOST: 0.0.0.0
+      ACP_PORT: "3003"
+      API_BASE_URL: http://api:4000
+      FRONTEND_BASE_URL: https://agentfund.online
+    depends_on:
+      - api
+    expose:
+      - "3003"
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
