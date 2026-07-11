@@ -14,7 +14,7 @@ import { AgentFundClient } from "../sdk/src/client.js";
 const API_URL = process.env.API_URL ?? "https://api.agentfund.online";
 const RPC = process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 const PROJECT_ID = "9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H";
-const AMOUNT = 5_000_000; // 5 USDC (6 decimals)
+const AMOUNT = Number(process.env.AMOUNT ?? 5_000_000); // base units; default 5 USDC (6 decimals)
 
 async function main(): Promise<void> {
   const keypair = Keypair.fromSecretKey(
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   console.log(`donor:   ${keypair.publicKey.toBase58()}`);
   console.log(`api:     ${API_URL}`);
   console.log(`project: ${PROJECT_ID}`);
-  console.log(`amount:  ${AMOUNT} base units (5 USDC)\n`);
+  console.log(`amount:  ${AMOUNT} base units\n`);
 
   const client = new AgentFundClient({ apiUrl: API_URL, keypair });
   const t0 = Date.now();

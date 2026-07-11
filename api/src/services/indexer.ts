@@ -41,15 +41,16 @@ function toDate(unixSeconds: number | string | bigint): Date {
  * Processes one parsed on-chain event: records it (idempotently), then
  * upserts Prisma state and publishes the corresponding WS/SSE event.
  * Unknown (program, eventName) pairs are recorded but otherwise ignored.
+ * Returns true when the event was newly applied, false on a dedup skip.
  */
 export async function indexEvent(
   event: RawProgramEvent,
   logger?: MinimalErrorLogger,
-): Promise<void> {
+): Promise<boolean> {
   const existing = await prisma.indexedEvent.findUnique({
     where: { signature_eventName: { signature: event.signature, eventName: event.eventName } },
   });
-  if (existing) return; // already processed — Helius may redeliver
+  if (existing) return false; // already processed — Helius may redeliver
 
   await prisma.indexedEvent.create({
     data: {
@@ -65,8 +66,17 @@ export async function indexEvent(
     await dispatch(event);
   } catch (err) {
     logger?.error({ err, event }, "indexer: failed to apply event to read model");
+    // Un-mark the event so a Helius redelivery (or replay) can retry it —
+    // otherwise a transient dispatch failure would leave the signature
+    // permanently recorded as processed with no read-model row behind it.
+    await prisma.indexedEvent
+      .delete({
+        where: { signature_eventName: { signature: event.signature, eventName: event.eventName } },
+      })
+      .catch(() => undefined);
     throw err;
   }
+  return true;
 }
 
 async function dispatch(event: RawProgramEvent): Promise<void> {

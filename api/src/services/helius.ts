@@ -137,6 +137,8 @@ interface HeliusTransactionLike {
   slot?: number;
   meta?: { logMessages?: string[] };
   logMessages?: string[];
+  /** Helius raw payloads carry the signature here, not at the top level. */
+  transaction?: { signatures?: string[] };
 }
 
 const INVOKE_RE = /^Program (\w+) invoke \[\d+]$/;
@@ -146,7 +148,11 @@ const DATA_RE = /^Program data: (.+)$/;
 /** Parses every decodable Anchor event out of one transaction's logMessages. */
 export function parseTransactionLogs(tx: HeliusTransactionLike): RawProgramEvent[] {
   const logs = tx.meta?.logMessages ?? tx.logMessages ?? [];
-  const signature = tx.signature ?? "";
+  // Raw Helius deliveries have no top-level `signature`; it lives at
+  // transaction.signatures[0]. Falling back to "" here once collapsed every
+  // live event onto one dedup key, silently dropping all but the first
+  // contribution — the receiver refuses empty-signature events as a backstop.
+  const signature = tx.signature ?? tx.transaction?.signatures?.[0] ?? "";
   const slot = tx.slot ?? 0;
 
   const stack: string[] = [];
@@ -224,8 +230,18 @@ export function registerHeliusWebhook(app: FastifyInstance): void {
     for (const tx of transactions) {
       const events = parseTransactionLogs(tx);
       for (const event of events) {
-        await indexEvent(event, request.log);
-        indexed += 1;
+        if (!event.signature) {
+          // Without a signature the (signature, eventName) dedup key collapses
+          // distinct transactions onto one row and later events vanish. Refuse
+          // loudly instead — this delivery shape needs a parser fix, not a skip.
+          request.log.error(
+            { slot: event.slot, program: event.program, eventName: event.eventName },
+            "helius webhook: event has no signature — refusing to index (payload shape unrecognized?)",
+          );
+          continue;
+        }
+        const applied = await indexEvent(event, request.log);
+        if (applied) indexed += 1;
       }
     }
 
