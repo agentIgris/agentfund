@@ -224,6 +224,49 @@ export function buildCreateProjectIx(params: CreateProjectParams): TransactionIn
   });
 }
 
+export interface InitializeEscrowParams {
+  /** Pays the escrow account rent (usually the creator itself). */
+  payer: PublicKey;
+  /** Bound into escrow.creator — the only address milestone releases pay. Must sign. */
+  creator: PublicKey;
+  project: PublicKey;
+  goalAmount: bigint | number;
+  /** Unix seconds. */
+  deadline: bigint | number;
+  milestoneCount: number;
+  tokenMint: PublicKey;
+}
+
+export function buildInitializeEscrowIx(params: InitializeEscrowParams): TransactionInstruction {
+  const [escrow] = deriveEscrowPda(params.project);
+  const escrowProgram = programId("escrow");
+  const native = isNativeSol(params.tokenMint);
+
+  const mint = native ? escrowProgram : params.tokenMint;
+  const escrowAta = native ? escrowProgram : getAssociatedTokenAddress(params.tokenMint, escrow);
+
+  return new TransactionInstruction({
+    programId: escrowProgram,
+    keys: [
+      { pubkey: params.payer, isSigner: true, isWritable: true },
+      { pubkey: params.creator, isSigner: true, isWritable: false },
+      { pubkey: escrow, isSigner: false, isWritable: true },
+      { pubkey: mint, isSigner: false, isWritable: false },
+      { pubkey: escrowAta, isSigner: false, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: buildInstructionData("initialize_escrow", [
+      encodePubkey(params.project),
+      encodeU64(params.goalAmount),
+      encodeI64(params.deadline),
+      encodeU8(params.milestoneCount),
+      encodePubkey(params.tokenMint),
+    ]),
+  });
+}
+
 export interface ContributeParams {
   contributor: PublicKey;
   project: PublicKey;

@@ -84,6 +84,10 @@ export interface CreateProjectParams {
   milestones: MilestoneInput[];
 }
 
+export interface InitializeEscrowParams {
+  projectId: string;
+}
+
 export interface ContributeParams {
   projectId: string;
   /** Base units — lamports for SOL, micro-USDC for USDC. */
@@ -233,6 +237,21 @@ export class AgentFundClient {
     );
     const signature = await this.signAndSend(unsignedTx);
     return { projectId, signature };
+  }
+
+  /**
+   * Claims the escrow PDA for an existing project. Normally unnecessary —
+   * createProject()'s transaction already initializes the escrow atomically —
+   * but recovers projects whose escrow init was dropped. Creator-only.
+   */
+  async initializeEscrow(params: InitializeEscrowParams): Promise<SignAndSendResult> {
+    const { unsignedTx } = await this.post<{ unsignedTx: string }>(
+      "/tx/build/initialize_escrow",
+      { projectId: params.projectId },
+      { auth: true },
+    );
+    const signature = await this.signAndSend(unsignedTx);
+    return { signature };
   }
 
   /** Donates `amount` base units of the project's token to its escrow PDA. */

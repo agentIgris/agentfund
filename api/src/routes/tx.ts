@@ -30,6 +30,7 @@ import { getConnection, buildUnsignedTransactionBase64 } from "../services/solan
 import {
   buildContributeIx,
   buildCreateProjectIx,
+  buildInitializeEscrowIx,
   buildRefundIx,
   buildRegisterAgentIx,
   buildReleaseMilestoneIx,
@@ -96,9 +97,48 @@ export function registerTxRoutes(app: FastifyInstance): void {
           deadline: body.deadline,
           milestoneCount: body.milestones.length,
         });
-        const unsignedTx = await buildUnsignedTransactionBase64([ix], feePayer);
         const [projectPda] = deriveProjectPda(feePayer, projectIndex);
+        // Finding #9: the escrow init rides in the SAME transaction as
+        // create_project, so the [ESCROW_SEED, project] slot is claimed
+        // atomically by the creator with terms identical to the project's —
+        // no window for a third party to front-run it with mismatched terms.
+        const escrowIx = buildInitializeEscrowIx({
+          payer: feePayer,
+          creator: feePayer,
+          project: projectPda,
+          goalAmount: body.goalAmount,
+          deadline: body.deadline,
+          milestoneCount: body.milestones.length,
+          tokenMint,
+        });
+        const unsignedTx = await buildUnsignedTransactionBase64([ix, escrowIx], feePayer);
         return reply.send({ unsignedTx, projectId: projectPda.toBase58() });
+      }
+
+      case "initialize_escrow": {
+        const parsed = txBuildBodySchemas.initialize_escrow.safeParse(request.body);
+        if (!parsed.success) return reply.code(400).send({ error: "invalid_request", details: parsed.error.flatten() });
+        const body = parsed.data;
+        const project = await prisma.project.findUnique({ where: { id: body.projectId } });
+        if (!project) return reply.code(404).send({ error: "project_not_found" });
+        // The program binds escrow.creator to the `creator` signer, and the
+        // fee payer is the only signer of API-built transactions — so only
+        // the project's creator may claim its escrow slot, with terms taken
+        // from the indexed project record rather than the request body.
+        if (project.creator !== feePayer.toBase58()) {
+          return reply.code(403).send({ error: "not_project_creator" });
+        }
+        const ix = buildInitializeEscrowIx({
+          payer: feePayer,
+          creator: feePayer,
+          project: new PublicKey(project.id),
+          goalAmount: project.goalAmount,
+          deadline: project.deadline,
+          milestoneCount: project.milestoneCount,
+          tokenMint: new PublicKey(project.tokenMint),
+        });
+        const unsignedTx = await buildUnsignedTransactionBase64([ix], feePayer);
+        return reply.send({ unsignedTx });
       }
 
       case "contribute": {

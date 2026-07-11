@@ -30,7 +30,7 @@ use std::str::FromStr;
 
 // Placeholder program id — replaced with the value of ESCROW_PROGRAM_ID
 // (env) once deployed. Keep in sync with Anchor.toml.
-declare_id!("Escrw1111111111111111111111111111111111111");
+declare_id!("HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz");
 
 // ─────────────────────────────────────────────────────────────
 // Constants
@@ -294,8 +294,8 @@ pub mod escrow {
     /// milestone_count`, except the final milestone which sweeps the
     /// remainder. Anyone may crank this once the threshold holds; funds
     /// only ever go to the creator recorded at `initialize_escrow` time.
-    pub fn release_milestone(
-        ctx: Context<ReleaseMilestone>,
+    pub fn release_milestone<'info>(
+        ctx: Context<'_, '_, 'info, 'info, ReleaseMilestone<'info>>,
         project: Pubkey,
         milestone_index: u8,
     ) -> Result<()> {

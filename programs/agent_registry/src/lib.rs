@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 // Placeholder program id — replaced with the value of REGISTRY_PROGRAM_ID
 // (env) once deployed. Keep in sync with Anchor.toml.
-declare_id!("AgReg11111111111111111111111111111111111");
+declare_id!("2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA");
 
 // ─────────────────────────────────────────────────────────────
 // PDA seeds — must match shared/src/constants.ts PDA_SEEDS byte-for-byte.

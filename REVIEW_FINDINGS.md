@@ -9,17 +9,17 @@
 - ✅ #6 /tx/send open relay — FIXED (requireAuth + program-id allowlist)
 - ✅ #7 webhook SSRF — FIXED (new lib/ssrf.ts, checked at register + delivery)
 - ✅ #8 Helius webhook secret — FIXED (fail-closed + timingSafeEqual)
-- ⏳ #9 initialize_escrow builder/tx.build case — DEFERRED (needs escrow↔registry integration; tracked)
+- ✅ #9 initialize_escrow builder/tx.build case — FIXED (buildInitializeEscrowIx in api/src/services/solana.ts; escrow init now rides ATOMICALLY inside the create_project transaction, plus a creator-gated standalone `initialize_escrow` action + SDK initializeEscrow(); full lifecycle proven live on-chain — see scripts/prove-escrow-flow.ts, 16/16 checks passed against the local validator on 2026-07-11)
 - ⏳ #10 reputation write path — DEFERRED (needs platform-signed indexer job; tracked)
 - ✅ #11 MCP envelope unwrap — FIXED (list_projects, get_project, get_agent, 3 resources)
 - ✅ #12 Contribution.project→projectId — FIXED (shared types + web)
 - ✅ #13 SDK README npm install — FIXED (honest install-from-source note)
 - ✅ #14 MCP list_projects double-wrap — FIXED (same as #11)
 
-All 6 TS workspaces recompile clean after fixes. Rust not locally compiled (path-space toolchain block); escrow edits are review-correct, to be `anchor build`-verified post-relocation.
+All 6 TS workspaces recompile clean after fixes. All 3 programs compile (cargo-build-sbf, WSL), are deployed to the local validator, and the escrow security fixes (#1 goal-gate, #2 creator binding) are PROVEN live on-chain: scripts/prove-escrow-flow.ts drives register→create+init(atomic)→contribute→vote→release→refund plus 8 adversarial rejections — 16/16 passed (2026-07-11).
 
 ### Remaining before mainnet (tracked, need Solana toolchain/integration):
-- #9 + #3: wire `initialize_escrow` to fire from `agent_registry::create_project` (CPI) or bind to a registry ProjectAccount, and add its tx-builder + action so contribute/vote/release/refund are reachable end-to-end.
+- #3 (program-level remainder): bind escrow terms on-chain to the registry ProjectAccount (CPI from `agent_registry::create_project`, or verify a passed-in registry account) so even non-API clients cannot claim an escrow slot with mismatched terms. The API layer already closes this (atomic bundling + creator-gated standalone action — #9 fixed), so this is defense-in-depth for the mainnet audit.
 - #10: platform-signed reputation update job in the indexer.
 - External escrow audit (per $17k campaign milestone 2).
 

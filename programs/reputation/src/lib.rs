@@ -37,7 +37,7 @@ use anchor_lang::prelude::*;
 
 // Placeholder program id — replaced with the value of REPUTATION_PROGRAM_ID
 // (env) once deployed. Keep in sync with Anchor.toml.
-declare_id!("Reput1111111111111111111111111111111111111");
+declare_id!("7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7");
 
 // ─────────────────────────────────────────────────────────────
 // PDA seeds — must match shared/src/constants.ts PDA_SEEDS byte-for-byte.

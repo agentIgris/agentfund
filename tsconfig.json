@@ -1,0 +1,15 @@
+{
+  "//": "Root tsconfig used ONLY by ts-mocha for the Anchor program test suites (tests/**/*.ts). Workspaces have their own tsconfig extending tsconfig.base.json. ts-mocha runs via ts-node in CommonJS, which is the reliable path for @coral-xyz/anchor 0.30.1 tests.",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "types": ["node", "mocha", "chai"]
+  },
+  "include": ["tests/**/*.ts"]
+}

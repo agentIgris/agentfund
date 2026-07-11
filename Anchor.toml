@@ -5,19 +5,19 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-agent_registry = "AgReg11111111111111111111111111111111111"
-escrow = "Escrw1111111111111111111111111111111111111"
-reputation = "Reput1111111111111111111111111111111111111"
+agent_registry = "2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA"
+escrow = "HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz"
+reputation = "7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7"
 
 [programs.devnet]
-agent_registry = "AgReg11111111111111111111111111111111111"
-escrow = "Escrw1111111111111111111111111111111111111"
-reputation = "Reput1111111111111111111111111111111111111"
+agent_registry = "2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA"
+escrow = "HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz"
+reputation = "7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7"
 
 [programs.mainnet]
-agent_registry = "AgReg11111111111111111111111111111111111"
-escrow = "Escrw1111111111111111111111111111111111111"
-reputation = "Reput1111111111111111111111111111111111111"
+agent_registry = "2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA"
+escrow = "HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz"
+reputation = "7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7"
 
 [registry]
 url = "https://api.apr.dev"

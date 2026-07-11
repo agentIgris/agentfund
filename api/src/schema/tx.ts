@@ -4,6 +4,7 @@ import { base58PubkeySchema } from "./common.js";
 export const txActionSchema = z.enum([
   "register_agent",
   "create_project",
+  "initialize_escrow",
   "contribute",
   "vote",
   "release_milestone",
@@ -33,6 +34,9 @@ export const txBuildBodySchemas = {
       .array(z.object({ description: z.string().min(1).max(500), amount: z.number().int().positive() }))
       .min(1)
       .max(10),
+  }),
+  initialize_escrow: z.object({
+    projectId: base58PubkeySchema,
   }),
   contribute: z.object({
     projectId: base58PubkeySchema,
