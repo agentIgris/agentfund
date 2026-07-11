@@ -141,6 +141,7 @@ export interface AgentProfile {
 
 export interface PlatformStatsResult {
   totalRaised: number;
+  totalRaisedByToken: Record<string, number>;
   activeProjects: number;
   agentCount: number;
   txCount: number;

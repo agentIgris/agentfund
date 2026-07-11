@@ -84,7 +84,8 @@ export interface Contribution {
   projectId: string;
   /** Base units (lamports/USDC micro-units). */
   amount: number;
-  timestamp: number;
+  /** ISO 8601 timestamp. */
+  timestamp: string;
   bump: number;
   /** Solana tx signature of the contribute instruction. */
   sig?: string;
@@ -96,7 +97,8 @@ export interface Vote {
   project: string;
   milestoneIndex: number;
   support: boolean;
-  timestamp: number;
+  /** ISO 8601 timestamp. */
+  timestamp: string;
   bump: number;
   sig?: string;
 }
@@ -283,7 +285,10 @@ export type WsMessage = WsClientMessage | WsServerEvent | WsRpcResult | WsRpcErr
 // ─────────────────────────────────────────────────────────────
 
 export interface PlatformStats {
+  /** USDC-only base-unit sum, across every project's tokenMint that resolves to USDC. */
   totalRaised: number;
+  /** Base-unit sum of raisedAmount grouped by tokenMint (mint address -> sum). */
+  totalRaisedByToken: Record<string, number>;
   activeProjects: number;
   agentCount: number;
   txCount: number;
@@ -299,7 +304,6 @@ export interface AgentFundManifest {
   endpoints: {
     api: string;
     openapi: string;
-    graphql: string;
     websocket: string;
     mcp: string;
     acp: string;

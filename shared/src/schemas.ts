@@ -72,7 +72,7 @@ export const contributionSchema = z.object({
   contributor: base58PubkeySchema,
   project: base58PubkeySchema,
   amount: z.number().int().positive(),
-  timestamp: z.number().int().positive(),
+  timestamp: z.string().datetime(),
   bump: z.number().int().min(0).max(255),
   sig: z.string().optional(),
 });
@@ -82,7 +82,7 @@ export const voteSchema = z.object({
   project: base58PubkeySchema,
   milestoneIndex: z.number().int().min(0).max(255),
   support: z.boolean(),
-  timestamp: z.number().int().positive(),
+  timestamp: z.string().datetime(),
   bump: z.number().int().min(0).max(255),
   sig: z.string().optional(),
 });
@@ -262,7 +262,10 @@ export const wsClientMessageSchema = z.discriminatedUnion("type", [
 // ─────────────────────────────────────────────────────────────
 
 export const platformStatsSchema = z.object({
+  /** USDC-only base-unit sum, across every project's tokenMint that resolves to USDC. */
   totalRaised: z.number().int().nonnegative(),
+  /** Base-unit sum of raisedAmount grouped by tokenMint (mint address -> sum). */
+  totalRaisedByToken: z.record(z.string(), z.number().int().nonnegative()),
   activeProjects: z.number().int().nonnegative(),
   agentCount: z.number().int().nonnegative(),
   txCount: z.number().int().nonnegative(),
@@ -278,7 +281,6 @@ export const agentFundManifestSchema = z.object({
   endpoints: z.object({
     api: z.string().url(),
     openapi: z.string().url(),
-    graphql: z.string().url(),
     websocket: z.string(),
     mcp: z.string().url(),
     acp: z.string().url(),

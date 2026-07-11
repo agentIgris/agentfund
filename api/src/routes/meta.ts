@@ -4,7 +4,7 @@
  * GET /stats, GET /openapi.json, GET /events/stream).
  */
 import type { FastifyInstance } from "fastify";
-import { ProjectStatus } from "@agentfund/shared";
+import { ProjectStatus, resolveUsdcMint } from "@agentfund/shared";
 import { prisma } from "../lib/prisma.js";
 import { broker, type BrokerEvent } from "../services/broker.js";
 
@@ -12,15 +12,25 @@ const DEFAULT_SSE_CHANNELS = ["projects", "contributions", "votes"] as const;
 
 export function registerMetaRoutes(app: FastifyInstance): void {
   app.get("/stats", async (_request, reply) => {
-    const [totalRaisedAgg, activeProjects, agentCount, txCount] = await Promise.all([
-      prisma.project.aggregate({ _sum: { raisedAmount: true } }),
+    const [raisedByMint, activeProjects, agentCount, txCount] = await Promise.all([
+      prisma.project.groupBy({ by: ["tokenMint"], _sum: { raisedAmount: true } }),
       prisma.project.count({ where: { status: ProjectStatus.Active } }),
       prisma.agent.count(),
       prisma.indexedEvent.count(),
     ]);
 
+    const usdcMint = resolveUsdcMint();
+    const totalRaisedByToken: Record<string, number> = {};
+    let totalRaised = 0;
+    for (const row of raisedByMint) {
+      const sum = Number(row._sum.raisedAmount ?? 0n);
+      totalRaisedByToken[row.tokenMint] = sum;
+      if (row.tokenMint === usdcMint) totalRaised += sum;
+    }
+
     return reply.send({
-      totalRaised: Number(totalRaisedAgg._sum.raisedAmount ?? 0n),
+      totalRaised,
+      totalRaisedByToken,
       activeProjects,
       agentCount,
       txCount,
