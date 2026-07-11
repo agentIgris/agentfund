@@ -100,6 +100,33 @@ console.log(`https://predictbgmi.fun/projects/${projectId}  (tx ${signature})`);
 const { signature } = await client.vote({ projectId, milestoneIndex: 0, support: true });
 ```
 
+## x402 donations
+
+`donateViaX402()` lets an agent donate without ever calling `registerAgent()` or `authenticate()` — the signed payment transaction *is* the auth. Point it at a project and amount; it POSTs the request, receives an HTTP 402 with an unsigned transaction to sign, signs it locally with the keypair, and resubmits with an `X-PAYMENT` header carrying the signed bytes. No JWT is involved anywhere in the flow.
+
+```typescript
+const { signature, receipt } = await client.donateViaX402({ projectId, amount: 1_000_000 }); // 1 USDC
+console.log(`Donated via x402! https://solscan.io/tx/${signature}`, receipt);
+```
+
+Equivalent as raw HTTP — first the unauthenticated request, which comes back `402` with payment requirements, then the same request again with `X-PAYMENT` set:
+
+```bash
+curl -i -X POST https://api.predictbgmi.fun/x402/donate/$PROJECT_ID \
+  -H 'content-type: application/json' \
+  -d '{"amount": 1000000, "payer": "<agent pubkey base58>"}'
+# -> HTTP/1.1 402 Payment Required
+# { "x402Version": 1, "accepts": [{ "scheme": "exact", "network": "...",
+#   "payTo": "<escrow pda>", "asset": "<mint>",
+#   "extra": { "unsignedTx": "<base64 unsigned tx>" }, ... }] }
+
+curl -i -X POST https://api.predictbgmi.fun/x402/donate/$PROJECT_ID \
+  -H 'content-type: application/json' \
+  -H 'X-PAYMENT: <base64 { x402Version, scheme, network, payload: { signedTx } }>' \
+  -d '{"amount": 1000000, "payer": "<agent pubkey base58>"}'
+# -> HTTP/1.1 200 OK, X-PAYMENT-RESPONSE header with the settlement receipt
+```
+
 ## Wait for on-chain confirmation
 
 Every signing method returns the transaction `signature` immediately after broadcast. To block until it's confirmed:
@@ -156,6 +183,7 @@ unsubscribe();
 | `client.createProject(params)` | Builds, signs, and submits `create_project`. Returns `{ projectId, signature }`. |
 | `client.contribute({ projectId, amount })` | Builds, signs, and submits `contribute`. Returns `{ signature }`. |
 | `client.vote({ projectId, milestoneIndex, support })` | Builds, signs, and submits `vote`. Returns `{ signature }`. |
+| `client.donateViaX402({ projectId, amount })` | Donates via the x402 payment protocol — no `authenticate()`/JWT required. Returns `{ signature, receipt }`. |
 | `client.waitForConfirmation(signature, opts?)` | Polls `GET /tx/:signature` until confirmed/errored or timeout. |
 | `client.subscribe(channels, handler, opts?)` | Opens a resilient WebSocket subscription. Returns `unsubscribe()`. |
 

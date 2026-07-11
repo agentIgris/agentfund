@@ -11,6 +11,7 @@ import { ProjectStatus } from "@agentfund/shared";
 import { prisma } from "../lib/prisma.js";
 import { broker } from "./broker.js";
 import { fetchIpfsJson, type ProjectMetadata } from "./ipfs.js";
+import { applyReputationEvent } from "./reputationWriter.js";
 
 /**
  * Structural subset of pino.Logger (and Fastify's FastifyBaseLogger, which
@@ -173,6 +174,14 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
       update: {},
     });
 
+    // Reputation write path (REVIEW_FINDINGS.md #10): +5 to the contributor
+    // for every confirmed contribution. Fire-and-forget — applyReputationEvent
+    // never throws, but `.catch` is defense-in-depth (matches the
+    // fire-and-forget pattern in routes/webhooks.ts's startWebhookDispatcher).
+    void applyReputationEvent({ agentWallet: d.contributor, reason: "ContributionMade" }).catch(
+      () => undefined,
+    );
+
     const project = await prisma.project.update({
       where: { id: d.project },
       data: { raisedAmount: BigInt(d.totalDeposited) },
@@ -199,6 +208,12 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
         type: "goal.reached",
         data: { project: d.project, totalRaised: Number(project.raisedAmount) },
       });
+
+      // Reputation write path: +50 to the project's creator once its goal is
+      // fully reached (project completion, creator side of the point table).
+      void applyReputationEvent({ agentWallet: project.creator, reason: "GoalReached" }).catch(
+        () => undefined,
+      );
     }
     return;
   }
@@ -239,6 +254,9 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
       update: d.support ? { votesFor: { increment: 1 } } : { votesAgainst: { increment: 1 } },
     });
 
+    // Reputation write path: +2 to the voter per governance vote cast.
+    void applyReputationEvent({ agentWallet: d.voter, reason: "VoteCast" }).catch(() => undefined);
+
     await broker.publish("votes", {
       type: "vote.cast",
       data: { project: d.project, voter: d.voter, support: d.support, sig: signature },
@@ -251,8 +269,14 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
       project: string;
       milestoneIndex: number;
       amount: number | string;
+      creator: string;
       timestamp: number;
     };
+
+    // Reputation write path: +15 to the creator per released milestone.
+    void applyReputationEvent({ agentWallet: d.creator, reason: "MilestoneReleased" }).catch(
+      () => undefined,
+    );
 
     await prisma.milestone.upsert({
       where: { projectId_index: { projectId: d.project, index: d.milestoneIndex } },
@@ -275,7 +299,18 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
 
   if (program === "escrow" && eventName === "Refunded") {
     const d = data as { project: string; timestamp: number };
+    // Snapshot the pre-update status so the creator's -20 lands exactly once
+    // (refund events fire once per contributor; only the first one flips the
+    // project to Failed).
+    const prev = await prisma.project
+      .findUnique({ where: { id: d.project }, select: { creator: true, status: true } })
+      .catch(() => null);
     await prisma.project.update({ where: { id: d.project }, data: { status: ProjectStatus.Failed } }).catch(() => undefined);
+    if (prev && prev.status !== ProjectStatus.Failed) {
+      void applyReputationEvent({ agentWallet: prev.creator, reason: "ProjectRefunded" }).catch(
+        () => undefined,
+      );
+    }
     await broker.publish(`project:${d.project}`, {
       type: "project.status_changed" as never,
       data: { project: d.project, status: "Failed" },

@@ -94,6 +94,20 @@ export interface ContributeParams {
   amount: number;
 }
 
+export interface DonateViaX402Params {
+  projectId: string;
+  /** Base units — lamports for SOL, micro-USDC for USDC. */
+  amount: number;
+}
+
+/** Decoded `X-PAYMENT-RESPONSE` header returned by a settled x402 payment. */
+export interface X402Receipt {
+  success: boolean;
+  transaction: string;
+  network: string;
+  payer: string;
+}
+
 export interface VoteParams {
   projectId: string;
   milestoneIndex: number;
@@ -265,6 +279,86 @@ export class AgentFundClient {
     return { signature };
   }
 
+  /**
+   * Donates via the x402 protocol instead of the authenticate() + /tx/build
+   * + /tx/send flow: no JWT, no registered session — the signed payment
+   * transaction itself is the proof of authorization. Posts the donation
+   * request with no `X-PAYMENT` header, expects an HTTP 402 back with an
+   * unsigned transaction to sign (spec: "x402 Donations"), then resubmits
+   * the identical request with `X-PAYMENT` carrying the signed transaction.
+   */
+  async donateViaX402(params: DonateViaX402Params): Promise<{ signature: string; receipt: X402Receipt | null }> {
+    if (!this.keypair) {
+      throw new Error("AgentFundClient.donateViaX402() requires a keypair — pass one to the constructor.");
+    }
+    const path = `/x402/donate/${params.projectId}`;
+    const url = `${this.apiUrl}${path}`;
+    const body = JSON.stringify({ amount: params.amount, payer: this.keypair.publicKey.toBase58() });
+
+    // 1. Unauthenticated request — expect HTTP 402 with payment requirements.
+    // Uses raw fetch (not the httpRequest helper) because the helper throws
+    // on any non-2xx status and can't hand back the 402 body we need here.
+    const quote = await fetch(url, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body,
+    });
+    const quoteBody = await parseJsonBody(quote);
+    if (quote.status !== 402) {
+      throw new Error(
+        `Expected HTTP 402 (payment required) from ${path}, got ${quote.status}: ${summarizeBody(quoteBody)}`,
+      );
+    }
+
+    const accept = (quoteBody as { accepts?: Array<Record<string, any>> } | undefined)?.accepts?.[0];
+    const unsignedTx = accept?.extra?.unsignedTx as string | undefined;
+    if (!unsignedTx) {
+      throw new Error(
+        `x402 402 response for ${path} is missing accepts[0].extra.unsignedTx: ${summarizeBody(quoteBody)}`,
+      );
+    }
+
+    // 2. Sign the offered transaction locally and resubmit with X-PAYMENT.
+    const tx = Transaction.from(Buffer.from(unsignedTx, "base64"));
+    tx.partialSign(this.keypair);
+    const signedTx = tx.serialize().toString("base64");
+
+    const paymentHeader = Buffer.from(
+      JSON.stringify({
+        x402Version: 1,
+        scheme: "exact",
+        network: accept!.network,
+        payload: { signedTx },
+      }),
+      "utf8",
+    ).toString("base64");
+
+    const settle = await fetch(url, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "X-PAYMENT": paymentHeader,
+      },
+      body,
+    });
+    const settleBody = await parseJsonBody(settle);
+    if (!settle.ok) {
+      const message =
+        (settleBody as { error?: string; message?: string } | undefined)?.error ??
+        (settleBody as { error?: string; message?: string } | undefined)?.message ??
+        summarizeBody(settleBody);
+      throw new Error(`x402 payment for ${path} failed (${settle.status}): ${message}`);
+    }
+
+    const receiptHeader = settle.headers.get("x-payment-response");
+    const receipt = receiptHeader
+      ? (JSON.parse(Buffer.from(receiptHeader, "base64").toString("utf8")) as X402Receipt)
+      : null;
+
+    return { signature: (settleBody as { signature: string }).signature, receipt };
+  }
+
   /** Casts an on-chain vote for/against releasing a project milestone. */
   async vote(params: VoteParams): Promise<SignAndSendResult> {
     const { unsignedTx } = await this.post<{ unsignedTx: string }>(
@@ -346,6 +440,26 @@ export class AgentFundClient {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Reads a fetch Response body as JSON, tolerating an empty or non-JSON payload. */
+async function parseJsonBody(res: Response): Promise<unknown> {
+  const raw = await res.text();
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
+
+function summarizeBody(body: unknown): string {
+  if (typeof body === "string") return body.slice(0, 500);
+  try {
+    return JSON.stringify(body).slice(0, 500);
+  } catch {
+    return String(body);
+  }
 }
 
 /** Re-exported for convenience so consumers don't need a direct `@solana/web3.js` dependency just to build a Keypair. */

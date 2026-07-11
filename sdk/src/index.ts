@@ -10,6 +10,8 @@ export type {
   MilestoneInput,
   CreateProjectParams,
   ContributeParams,
+  DonateViaX402Params,
+  X402Receipt,
   VoteParams,
   RegisterAgentParams,
   CreateProjectResult,

@@ -10,7 +10,7 @@
 - ✅ #7 webhook SSRF — FIXED (new lib/ssrf.ts, checked at register + delivery)
 - ✅ #8 Helius webhook secret — FIXED (fail-closed + timingSafeEqual)
 - ✅ #9 initialize_escrow builder/tx.build case — FIXED (buildInitializeEscrowIx in api/src/services/solana.ts; escrow init now rides ATOMICALLY inside the create_project transaction, plus a creator-gated standalone `initialize_escrow` action + SDK initializeEscrow(); full lifecycle proven live on-chain — see scripts/prove-escrow-flow.ts, 16/16 checks passed against the local validator on 2026-07-11)
-- ⏳ #10 reputation write path — DEFERRED (needs platform-signed indexer job; tracked)
+- ✅ #10 reputation write path — FIXED (services/reputationIx.ts + reputationWriter.ts: platform-authority-signed init_reputation+update_reputation, delta/reason pairs locked to the on-chain point table; wired into indexer.ts for ContributionMade/VoteCast/MilestoneReleased/GoalReached/ProjectRefunded; Config PDA init via scripts/init-reputation-config.ts. Proven live: score 100→105 on a ContributionMade event — scripts/prove-x402-live.ts, 9/9 passed 2026-07-11)
 - ✅ #11 MCP envelope unwrap — FIXED (list_projects, get_project, get_agent, 3 resources)
 - ✅ #12 Contribution.project→projectId — FIXED (shared types + web)
 - ✅ #13 SDK README npm install — FIXED (honest install-from-source note)
@@ -18,8 +18,13 @@
 
 All 6 TS workspaces recompile clean after fixes. All 3 programs compile (cargo-build-sbf, WSL), are deployed to the local validator, and the escrow security fixes (#1 goal-gate, #2 creator binding) are PROVEN live on-chain: scripts/prove-escrow-flow.ts drives register→create+init(atomic)→contribute→vote→release→refund plus 8 adversarial rejections — 16/16 passed (2026-07-11).
 
+### x402 phase (added 2026-07-11, all proven live — scripts/prove-x402-live.ts 9/9)
+- POST /x402/donate/:projectId — HTTP 402 payment-required flow, no JWT (the payment IS the auth): quote → X-PAYMENT signed-tx → verify (sigs, program allowlist, exactly-one contribute ix, project/amount/PDA binding) → settle → X-PAYMENT-RESPONSE receipt
+- SDK donateViaX402() — client side of the same handshake
+- escrow contribute_for — facilitator pays, beneficiary gets credit/vote-weight/refund rights
+
 ### Remaining before mainnet (tracked, need Solana toolchain/integration):
-- #3 (program-level remainder): bind escrow terms on-chain to the registry ProjectAccount (CPI from `agent_registry::create_project`, or verify a passed-in registry account) so even non-API clients cannot claim an escrow slot with mismatched terms. The API layer already closes this (atomic bundling + creator-gated standalone action — #9 fixed), so this is defense-in-depth for the mainnet audit.
+- ~~#3 (program-level remainder)~~ FIXED 2026-07-11: `initialize_escrow` now requires the registry ProjectAccount (owner + discriminator enforced via cross-crate `Account<ProjectAccount>`) and verifies creator/goal/deadline/milestone_count/token_mint match it exactly. Proven live: front-run by non-creator → InvalidCreator, mismatched terms → TermsMismatch (scripts/prove-escrow-flow.ts, 22/22).
 - #10: platform-signed reputation update job in the indexer.
 - External escrow audit (per $17k campaign milestone 2).
 
