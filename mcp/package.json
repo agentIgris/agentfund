@@ -40,7 +40,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@agentfund/shared": "0.1.0",
+    "@agentfund/shared": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "dotenv": "^16.4.5",
     "express": "^5.2.1",
@@ -57,5 +57,9 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

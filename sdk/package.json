@@ -44,7 +44,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@agentfund/shared": "0.1.0",
+    "@agentfund/shared": "^0.1.0",
     "@solana/web3.js": "^1.95.3",
     "tweetnacl": "^1.0.3",
     "bs58": "^6.0.0",

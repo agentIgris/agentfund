@@ -23,7 +23,6 @@
     "types",
     "zod"
   ],
-  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -43,5 +42,11 @@
   "devDependencies": {
     "typescript": "^5.5.4"
   },
-  "description": "Shared types, zod schemas, and cluster/PDA constants for the AgentFund platform."
+  "description": "Shared types, zod schemas, and cluster/PDA constants for the AgentFund platform.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ]
 }
