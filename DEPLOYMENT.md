@@ -23,6 +23,26 @@ See the [README](README.md) for the architecture this runbook deploys.
 
 Campaign terms: 17,000 USDC goal (devnet USDC `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`), 45-day deadline, 4 milestones. Seeded with `scripts/seed-devnet-campaign.ts` (direct instruction builders; the mainnet campaign will go through the API + IPFS pinning via `scripts/seed-first-campaign.ts`).
 
+### Devnet x402 smoke test — attempted 2026-07-11 — BLOCKED (no devnet USDC)
+
+Goal: prove one real paid donation against the live devnet deployment (project PDA `9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H`, escrow PDA `AsfYmmyw6uMhshEJtAXPRT3G5qgFCfB3c54n42ErZcCy`, escrow USDC ATA `HUogrZJGWoPg4DFjtDfo2HpFLfv8Hxd5wFjNsFjBu83P`) using the existing `scripts/prove-x402-live.ts` E2E flow (previously 9/9 passing on a local validator, per `LOCAL_VALIDATOR.md`).
+
+**What was checked:**
+- Deploy wallet `DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE` balance on devnet: `4.592172 SOL` — plenty for tx fees.
+- `spl-token accounts --owner DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE --url https://api.devnet.solana.com` → **no token accounts at all**. No USDC ATA exists for this wallet yet, so `spl-token balance <mint> --owner ...` fails with `Could not find token account`.
+- The devnet USDC mint (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`, from `shared/src/constants.ts`) is Circle's canonical devnet USDC mint. `spl-token display` shows mint authority `GrNg1XM2ctzeE2mXxXCfhcTUbejM8Z4z4wNVTy2FjMEz` — **not** a key this project controls, so there is no way to self-mint test USDC.
+- Searched the repo (`scripts/`, `LOCAL_VALIDATOR.md`, `DEPLOYMENT.md`, `SECURITY.md`) for any prior USDC-funding mechanism: none found. `LOCAL_VALIDATOR.md` explicitly notes the E2E suite moved to a local validator "since devnet faucet was rate-limited" — confirming the earlier devnet rehearsal (`scripts/seed-devnet-campaign.ts`, tx `2TJiKt6X…XoSNVu`) only created the project + escrow accounts; it never funded the escrow with actual USDC, because there was never devnet USDC in the deploy wallet.
+
+**Blocker:** no devnet USDC in the deploy wallet, and no in-repo way to obtain it. Circle's devnet USDC faucet (https://faucet.circle.com) is a browser-only tool — asset "USDC", network "Solana Devnet", paste recipient address `DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE`, solve reCAPTCHA, 20 USDC per address per 2-hour window. This cannot be scripted/automated from this environment (no headless-captcha capability).
+
+**To unblock and complete the smoke test, run these steps manually:**
+1. Open https://faucet.circle.com in a browser, select USDC + Solana Devnet, paste `DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE`, solve the captcha, submit. Confirm receipt with:
+   `spl-token balance 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU --owner DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE --url https://api.devnet.solana.com`
+2. Start Postgres + Redis, `prisma db push` against a devnet-pointed `DATABASE_URL`, then start the API with devnet env (`SOLANA_CLUSTER=devnet`, `SOLANA_RPC_URL=https://api.devnet.solana.com`, `REGISTRY_PROGRAM_ID=2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA`, `ESCROW_PROGRAM_ID=HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz`, `REPUTATION_PROGRAM_ID=7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7`, `PLATFORM_WALLET_KEYPAIR_PATH=~/.config/solana/id.json`).
+3. Reuse (don't rewrite) `scripts/prove-x402-live.ts` as the template for a small (≤1 USDC) donation against the existing project/escrow PDAs above instead of a freshly-generated project — or adapt its `donateViaX402()` call directly against the live API with `amount: 1_000_000` (1 USDC, 6 decimals) and `projectId: "9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H"`.
+4. Verify on-chain: compare `spl-token balance HUogrZJGWoPg4DFjtDfo2HpFLfv8Hxd5wFjNsFjBu83P --url https://api.devnet.solana.com` before/after, and confirm the returned tx signature at `https://solscan.io/tx/<sig>?cluster=devnet`.
+5. Append the resulting tx signature, explorer link, and amount to this section, and kill any servers started for the test.
+
 ### Mainnet — not yet deployed
 
 Blocked on the external escrow audit and deposit-cap work described in [Step 3](#3-promote-to-mainnet-beta).

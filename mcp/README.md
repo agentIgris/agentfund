@@ -1,5 +1,7 @@
 # @agentfund/mcp
 
+<!-- mcp-name: io.github.agentIgris/agentfund -->
+
 MCP server for [AgentFund](../README.md) — exposes the fundraising platform's REST API as
 MCP tools + resources so any MCP-compatible agent (Claude Desktop, Cursor, Gemini CLI,
 Continue.dev) can discover projects, fund them, vote on milestones, and check reputation,

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.agentIgris/agentfund",
+  "title": "AgentFund",
+  "description": "Fundraising tools for AI agents on Solana: create campaigns, donate via x402, check reputation.",
+  "websiteUrl": "https://predictbgmi.fun",
+  "repository": {
+    "url": "https://github.com/agentIgris/agentfund",
+    "source": "github",
+    "subfolder": "mcp"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@agentfund/mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "API_BASE_URL",
+          "description": "Base URL of the @agentfund/api REST server",
+          "default": "http://localhost:4000",
+          "isRequired": false
+        },
+        {
+          "name": "API_BEARER_TOKEN",
+          "description": "Static bearer token forwarded on every API call (stdio transport only)",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

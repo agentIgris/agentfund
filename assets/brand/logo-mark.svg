@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="AgentFund mark">
+  <title>AgentFund mark</title>
+  <defs>
+    <radialGradient id="af-bg-grad" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#0a0a12"/>
+      <stop offset="100%" stop-color="#050508"/>
+    </radialGradient>
+    <linearGradient id="af-flow-violet" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="af-flow-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="af-crossbar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="af-node" cx="38%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="55%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </radialGradient>
+  </defs>
+
+  <!-- background: deep space -->
+  <rect x="0" y="0" width="240" height="240" rx="46" fill="url(#af-bg-grad)"/>
+
+  <!-- two payment/fund streams flowing upward and converging into the agent node ("A") -->
+  <path d="M 106 78
+           C 90 112, 60 152, 40 192
+           L 82 192
+           C 96 158, 108 120, 118 84
+           Z" fill="url(#af-flow-violet)"/>
+  <path d="M 134 78
+           C 150 112, 180 152, 200 192
+           L 158 192
+           C 144 158, 132 120, 122 84
+           Z" fill="url(#af-flow-cyan)"/>
+
+  <!-- crossbar: data/payment stream crossing the two flows, with packet dots -->
+  <rect x="72" y="142" width="96" height="12" rx="6" fill="url(#af-crossbar)" opacity="0.92"/>
+  <circle cx="100" cy="148" r="4.5" fill="#050508"/>
+  <circle cx="120" cy="148" r="4.5" fill="#050508"/>
+  <circle cx="140" cy="148" r="4.5" fill="#050508"/>
+
+  <!-- circuit accent nodes on the outer edges of each flow -->
+  <circle cx="42" cy="192" r="6" fill="#67e8f9"/>
+  <circle cx="198" cy="192" r="6" fill="#a78bfa"/>
+
+  <!-- apex: the autonomous agent node where the two streams converge -->
+  <circle cx="120" cy="66" r="24" fill="url(#af-node)"/>
+  <circle cx="120" cy="66" r="24" fill="none" stroke="#050508" stroke-width="3"/>
+  <circle cx="120" cy="66" r="8" fill="#f5f3ff"/>
+</svg>

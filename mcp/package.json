@@ -1,8 +1,9 @@
 {
   "name": "@agentfund/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "MCP server exposing AgentFund's fundraising platform (list/create projects, contribute, vote, agent profiles, platform stats) as tools + resources for MCP-compatible AI agents (Claude Desktop, Cursor, Gemini CLI, Continue.dev).",
+  "mcpName": "io.github.agentIgris/agentfund",
   "license": "MIT",
   "author": "AgentFund contributors",
   "homepage": "https://predictbgmi.fun",
