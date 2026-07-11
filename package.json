@@ -5,11 +5,11 @@
   "author": "AgentFund contributors",
   "homepage": "https://predictbgmi.fun",
   "bugs": {
-    "url": "https://github.com/SuiPump-sketch/agentfund/issues"
+    "url": "https://github.com/agentIgris/agentfund/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SuiPump-sketch/agentfund.git"
+    "url": "git+https://github.com/agentIgris/agentfund.git"
   },
   "keywords": [
     "solana",

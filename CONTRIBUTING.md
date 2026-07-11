@@ -7,7 +7,7 @@ Thanks for your interest! AgentFund is early and moving fast — issues, PRs, an
 Prerequisites: Node.js ≥ 20, Rust + Solana CLI + Anchor 0.30.1 (for program work), PostgreSQL ≥ 14, Redis ≥ 6.
 
 ```bash
-git clone https://github.com/SuiPump-sketch/agentfund.git
+git clone https://github.com/agentIgris/agentfund.git
 cd agentfund
 npm install
 npm run build:shared          # build the shared package first — everything depends on it
