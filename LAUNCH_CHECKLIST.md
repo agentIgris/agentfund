@@ -8,7 +8,7 @@ Compiled by the integration agent from all seven build agents' reports. Everythi
 
 1. **Revoke the two npm tokens that were pasted in chat.** Go to https://www.npmjs.com/settings/~/tokens (or your org's tokens page) → find any token you pasted into this conversation → **Revoke**. Do this immediately regardless of anything else below — those tokens must be treated as compromised.
 
-2. **DNS for agentfund.online → GitHub Pages.** At your DNS provider, add:
+2. **DNS for agentfund.online → GitHub Pages.** ✅ Resolved — the landing page is live at https://agentfund.online. Left below for reference/re-verification:
    - Apex `A` records (four, all pointing agentfund.online to GitHub Pages):
      ```
      agentfund.online.   A   185.199.108.153

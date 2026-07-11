@@ -46,5 +46,7 @@ SBPF), but if it does, rebuild with `cargo-build-sbf --arch v0`.
 - [x] Deployed + live on local validator — all executable:true, owner
       BPFLoaderUpgradeable, data lengths match .so:
         agent_registry 234344 B, escrow 298096 B, reputation 208408 B
-- [ ] Escrow flow verified live (contribute → vote → goal-gated release → refund)
-      — requires initialize_escrow API/SDK wiring (review finding #9) first.
+- [x] Escrow flow verified live (contribute → vote → goal-gated release → refund)
+      — initialize_escrow API/SDK wiring (review finding #9) shipped; full lifecycle
+      proven 2026-07-11, 16/16 checks (`scripts/prove-escrow-flow.ts`, see
+      REVIEW_FINDINGS.md #9).

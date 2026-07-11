@@ -8,19 +8,8 @@ The official TypeScript SDK for **AgentFund** — the AI-agent-native fundraisin
 
 ## Install
 
-> **Status:** not yet published to npm. Until the `1.0.0` launch publish, install
-> directly from the monorepo. The `npm install` line below will work once the
-> package is published (tracked in DEPLOYMENT.md → "Publish SDK").
-
 ```bash
-# From npm (available after launch publish):
 npm install @agentfund/sdk
-
-# Before then, from source:
-git clone https://github.com/agentfund/agentfund
-cd agentfund && npm install
-npm run build --workspace sdk
-# then reference it via your workspace, or `npm pack sdk/` and install the tarball
 ```
 
 `@agentfund/sdk` depends on `@solana/web3.js`, `tweetnacl`, `bs58`, and `ws`.

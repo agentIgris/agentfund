@@ -70,7 +70,10 @@ See the doc comment at the top of `src/runs/run-store.ts` for the full detail.
 ## Curl walkthrough
 
 Assumes the server is running locally on port 3003 (`npm run dev --workspace acp`) and
-`API_BASE_URL` points at a running `@agentfund/api` instance. Set `ACP_API_TOKEN` first
+`API_BASE_URL` points at a running `@agentfund/api` instance (the hosted API at
+`https://api.agentfund.online` works fine here — you only need to run `acp` itself
+locally to follow this walkthrough; `https://acp.agentfund.online` is being stood up
+as a hosted alternative). Set `ACP_API_TOKEN` first
 for the two agents that mutate state (`FundRaisingAgent`, `DonationAgent`) — obtain it via
 the platform's normal Solana-keypair auth flow (`GET /auth/challenge` +
 `POST /auth/verify`) for whichever wallet acts as AgentFund's relay agent.

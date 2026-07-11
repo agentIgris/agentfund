@@ -2,6 +2,8 @@
 
 Thanks for your interest! AgentFund is early and moving fast — issues, PRs, and integration reports (especially from agent frameworks) are all welcome.
 
+> If you just want to build an integration (SDK, MCP, ACP, raw HTTP) against a live AgentFund instance, you don't need any of this — point your client at `https://api.agentfund.online` and skip straight to the [README quickstart](README.md#quickstart). Everything below is for working on the platform's own code.
+
 ## Development setup
 
 Prerequisites: Node.js ≥ 20, Rust + Solana CLI + Anchor 0.30.1 (for program work), PostgreSQL ≥ 14, Redis ≥ 6.

@@ -54,7 +54,7 @@ Blocked on the external escrow audit and deposit-cap work described in [Step 3](
 1. [Prerequisites](#1-prerequisites)
 2. [Deploy the Anchor programs to devnet + smoke test](#2-deploy-the-anchor-programs-to-devnet--smoke-test)
 3. [Promote to mainnet-beta](#3-promote-to-mainnet-beta)
-4. [Deploy services (Railway) + frontend (Vercel) + DNS](#4-deploy-services-railway--frontend-vercel--dns)
+4. [Deploy services (EC2 + Docker Compose) + frontend (Vercel) + DNS](#4-deploy-services-ec2--docker-compose--frontend-vercel--dns)
 5. [Run the seed script](#5-run-the-seed-script)
 6. [Directory registrations](#6-directory-registrations)
 
@@ -69,11 +69,11 @@ Before touching any cluster, have all of the following ready:
 | **Funded deploy wallet** | A Solana CLI keypair (`solana-keygen new -o deploy-wallet.json`) funded with enough SOL to pay for program deployment rent + upgrades. Devnet: `solana airdrop 2 -k deploy-wallet.json --url devnet` (repeat as needed). Mainnet: fund with real SOL — budget **~6-8 SOL** across the three programs (initial deploy + a margin for future upgrades; each program account's rent-exempt reserve scales with its compiled size). This is also the wallet referenced by `PLATFORM_WALLET_KEYPAIR_PATH` for API-side platform actions (e.g. the seed script) unless you split those roles. |
 | **Helius account + API key** | Sign up at helius.dev. You need: (a) an RPC API key for `SOLANA_RPC_URL`, and (b) a webhook configured (after program deployment — see Step 2) watching all three deployed program IDs (`REGISTRY_PROGRAM_ID`, `ESCROW_PROGRAM_ID`, `REPUTATION_PROGRAM_ID`) for `PROGRAM_INSTRUCTION` (or "enhanced"/raw, whichever tier you're on) events, pointed at `POST https://api.<domain>/indexer/helius-webhook`. Set `HELIUS_WEBHOOK_SECRET` to a random value and configure Helius to send it as the shared-secret header — `api/src/services/helius.ts` verifies it on every inbound call. |
 | **Pinata account + JWT** | Sign up at pinata.cloud, generate a JWT with `pinJSONToIPFS` scope. Set as `PINATA_JWT`. Used to pin project/agent metadata (`api/src/services/ipfs.ts`). |
-| **PostgreSQL** | v14+. Managed (Railway/Neon/RDS) or self-hosted. `DATABASE_URL` in Prisma connection-string form. |
-| **Redis** | v6+. Used for pub/sub event fanout (`services/broker.ts`), the auth-challenge nonce store, and BullMQ webhook delivery queues. `REDIS_URL`. |
+| **PostgreSQL** | v14+. Runs as the `postgres` container in the `deploy/` Docker Compose stack by default (no separate provisioning needed); use a managed provider (Neon/RDS) instead if you'd rather not run it on the API host. `DATABASE_URL` in Prisma connection-string form. |
+| **Redis** | v6+. Runs as the `redis` container in the `deploy/` stack by default. Used for pub/sub event fanout (`services/broker.ts`), the auth-challenge nonce store, and BullMQ webhook delivery queues. `REDIS_URL`. |
 | **Anchor + Solana CLI toolchain** | `anchor --version` (Anchor 0.30.x, matching `@coral-xyz/anchor` in `api/package.json`), `solana --version`, `cargo --version`. Install via `sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"` and `cargo install --git https://github.com/coral-xyz/anchor avm --locked && avm install latest && avm use latest`. |
-| **Domain access** | DNS control for `agentfund.online` (or your domain) to add the subdomain records in [Step 4](#4-deploy-services-railway--frontend-vercel--dns). |
-| **Railway + Vercel accounts** | For hosting `api`/`mcp`/`acp` and `web` respectively. |
+| **Domain access** | DNS control for `agentfund.online` (or your domain) to add the subdomain records in [Step 4](#4-deploy-services-ec2--docker-compose--frontend-vercel--dns). |
+| **EC2 (or equivalent) + Vercel accounts** | For hosting `api`/`mcp`/`acp` (single host via `deploy/docker-compose.prod.yml`, see [`deploy/README.md`](deploy/README.md)) and `web` (Vercel) respectively. |
 
 Populate `.env` from the repo-root `.env.example` (and each workspace's own `.env.example` — `api/`, `mcp/`, `acp/`, `sdk/`, `scripts/`) before running anything below. Never commit a real `.env` or keypair file.
 
@@ -146,7 +146,9 @@ npm run dev:acp      # ACP server, http://localhost:3003
 npm run dev:web      # Next.js, http://localhost:3000
 ```
 
-Register the Helius devnet webhook now (see [Prerequisites](#1-prerequisites)) pointed at a public URL for `api` (use `ngrok http 4000` or similar if testing before Railway deploy) — the indexer pipeline (Helius webhook → parse → Postgres → Redis → WS fanout) needs it live for the smoke test below.
+(This is for iterating on the platform's own code. If you just want a live endpoint to test against, `https://api.agentfund.online` is already running the deployed `deploy/` stack.)
+
+Register the Helius devnet webhook now (see [Prerequisites](#1-prerequisites)) pointed at a public URL for `api` (use `ngrok http 4000` or similar if testing before the EC2 deploy) — the indexer pipeline (Helius webhook → parse → Postgres → Redis → WS fanout) needs it live for the smoke test below.
 
 ### 2.6 Manual end-to-end smoke test (devnet)
 
@@ -187,25 +189,33 @@ Once you've made a deliberate go/no-go call on the above:
 
 ---
 
-## 4. Deploy services (Railway) + frontend (Vercel) + DNS
+## 4. Deploy services (EC2 + Docker Compose) + frontend (Vercel) + DNS
 
-### 4.1 Railway — `api`, `mcp`, `acp`
+### 4.1 EC2 — `api`, `mcp`, `acp`
 
-Create three Railway services from this repo, each rooted at its workspace:
+`api`, `mcp`, and `acp` run as one Docker Compose stack on a single host (currently a `t4g.small` EC2 instance) — see [`deploy/README.md`](deploy/README.md) for the full bootstrap/update runbook. In short:
 
-| Service | Root dir | Build | Start | Port |
-|---|---|---|---|---|
-| `agentfund-api` | `api/` | `npm run build --workspace shared && npm run build --workspace api` | `npm run start --workspace api` | `4000` (`PORT`) |
-| `agentfund-mcp` | `mcp/` | `npm run build --workspace shared && npm run build --workspace mcp` | `npm run start:http --workspace mcp` | `3002` (`MCP_HTTP_PORT`) |
-| `agentfund-acp` | `acp/` | `npm run build --workspace shared && npm run build --workspace acp` | `npm run start --workspace acp` | `3003` (`ACP_PORT`) |
+| Service | Image / build | Port (internal) | Notes |
+|---|---|---|---|
+| `api` | `deploy/api.Dockerfile` | `4000` | Fastify REST + WS + x402; runs `prisma migrate deploy` on every boot |
+| `mcp` | `deploy/mcp.Dockerfile` | `3002` | Streamable HTTP transport; talks to `api` over the compose-internal network (`http://api:4000`) |
+| `acp` | `deploy/acp.Dockerfile` | `3003` | Same internal-network pattern as `mcp` |
+| `postgres` | `postgres:16-alpine` | `5432` | Compose-managed volume |
+| `redis` | `redis:7-alpine` | `6379` | Compose-managed volume, AOF persistence |
+| `caddy` | `caddy:2-alpine` | `80`/`443` | Reverse proxy + automatic Let's Encrypt TLS for all three public hostnames |
 
-Because this is an npm workspaces monorepo, point each Railway service's build command at the **repo root** (not just the workspace dir) so `npm ci` hoists shared deps correctly, then run the workspace-scoped build/start scripts shown above. Attach the managed Postgres and Redis plugins (or point `DATABASE_URL`/`REDIS_URL` at your own), and set every env var from `.env.example` (repo root + `api/.env.example`, `mcp/.env.example`, `acp/.env.example` as applicable to that service) in each service's Railway environment — do not share a single Railway environment across all three unless you're intentionally keeping them in lockstep.
-
-For `agentfund-api`, run the Prisma migration once per environment before first boot:
+Bootstrap a fresh host and bring the stack up:
 
 ```bash
-npm run prisma:deploy --workspace api
+git clone https://github.com/agentIgris/agentfund.git && cd agentfund/deploy
+cp .env.example .env             # fill in secrets — see deploy/.env.example
+mkdir -p secrets                 # place platform-wallet.json here (0600)
+docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Set every env var `deploy/.env.example` lists (repo-root `.env.example` and each workspace's `.env.example` cover the same variables for local reference). Prisma migrations apply automatically on `api` container boot — no separate migrate step needed.
+
+To deploy an update, `git pull` on the host and re-run the `up -d --build` command (see [`deploy/README.md`](deploy/README.md) → "Update to latest main").
 
 ### 4.2 Vercel — `web`
 
@@ -217,12 +227,13 @@ Add these records at your DNS provider for `agentfund.online` (adjust if using a
 
 | Record | Type | Target |
 |---|---|---|
-| `agentfund.online` | A / ALIAS | Vercel (per Vercel's domain-setup instructions) |
-| `api.agentfund.online` | CNAME | Railway's provided domain for `agentfund-api` |
-| `mcp.agentfund.online` | CNAME | Railway's provided domain for `agentfund-mcp` |
-| `acp.agentfund.online` | CNAME | Railway's provided domain for `agentfund-acp` |
+| `agentfund.online` | A / ALIAS | GitHub Pages (landing page, `main:/docs`) |
+| `app.agentfund.online` | CNAME | Vercel (dashboard) |
+| `api.agentfund.online` | A | The EC2 host's public IP (Caddy routes by hostname) |
+| `mcp.agentfund.online` | A | The EC2 host's public IP (same Caddy instance) |
+| `acp.agentfund.online` | A | The EC2 host's public IP (same Caddy instance) |
 
-Both Railway and Vercel provision TLS automatically once DNS resolves — allow propagation time before the smoke test.
+`api`, `mcp`, and `acp` all resolve to the same box — Caddy (see `deploy/Caddyfile`) terminates TLS and routes each hostname to its own container. Caddy provisions Let's Encrypt certs automatically once DNS resolves to the host; Vercel does the same for `app.agentfund.online` — allow propagation time before the smoke test.
 
 ---
 

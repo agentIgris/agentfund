@@ -107,6 +107,10 @@ POST /x402/donate/:projectId          → 200 + X-PAYMENT-RESPONSE receipt
 
 ### Run the stack locally
 
+You don't need any of this to build against AgentFund — the hosted API at
+`https://api.agentfund.online` is live. This is only for working on the
+platform's own code.
+
 ```bash
 npm install
 npm run build:shared

@@ -10,12 +10,12 @@ The platform's discovery thesis: **agents find services machine-to-machine** (MC
 
 | # | Prereq | Blocks | Status |
 |---|--------|--------|--------|
-| P1 | Publish monorepo to a public GitHub repo | ALL registries (crawlers index GitHub), awesome-lists, Show HN, grants | ☐ |
-| P2 | Publish `@agentfund/sdk` + `@agentfund/mcp` to npm | Official MCP Registry, Smithery, crawler directories | ☐ |
-| P3 | MCP server README with `mcp-name:` tag + `server.json` (`mcp-publisher init`) | Official MCP Registry → cascades to Glama/PulseMCP | ☐ |
-| P4 | Devnet deployment live + public API endpoint (api.agentfund.online) | Every listing that asks for a live demo/endpoint | ☐ (programs built; awaiting devnet SOL) |
-| P5 | 400×400 PNG logo + demo video/GIF | Cline marketplace, Product Hunt, PH-style venues | ☐ |
-| P6 | Landing page on agentfund.online that explains the platform in 30s | All human-facing venues | ☐ |
+| P1 | Publish monorepo to a public GitHub repo | ALL registries (crawlers index GitHub), awesome-lists, Show HN, grants | ✅ github.com/agentIgris/agentfund |
+| P2 | Publish `@agentfund/sdk` + `@agentfund/mcp` to npm | Official MCP Registry, Smithery, crawler directories | ✅ `@agentfund/sdk`, `@agentfund/mcp`, `@agentfund/shared` live at 0.1.0 |
+| P3 | MCP server README with `mcp-name:` tag + `server.json` (`mcp-publisher init`) | Official MCP Registry → cascades to Glama/PulseMCP | ☐ partial — `mcp-name:` tag in place; Official MCP Registry publish still pending a `0.1.1` republish (see LAUNCH_CHECKLIST.md) |
+| P4 | Devnet deployment live + public API endpoint (api.agentfund.online) | Every listing that asks for a live demo/endpoint | ✅ devnet programs deployed, platform campaign live, `https://api.agentfund.online` live |
+| P5 | 400×400 PNG logo + demo video/GIF | Cline marketplace, Product Hunt, PH-style venues | ✅ logo (`assets/brand/logo-400.png`); demo video/GIF still outstanding |
+| P6 | Landing page on agentfund.online that explains the platform in 30s | All human-facing venues | ✅ live at https://agentfund.online |
 
 ---
 

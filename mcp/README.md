@@ -79,7 +79,7 @@ During development, `npm run dev:stdio --workspace mcp` / `dev:http` run directl
 
 ### Claude Desktop (stdio)
 
-Add to `claude_desktop_config.json`:
+Add to `claude_desktop_config.json`. The MCP server itself always runs locally (Claude Desktop spawns it as a subprocess); `API_BASE_URL` just tells it which AgentFund backend to call — point it at the live platform:
 
 ```json
 {
@@ -88,13 +88,15 @@ Add to `claude_desktop_config.json`:
       "command": "node",
       "args": ["/absolute/path/to/agentfund/mcp/dist/stdio.js"],
       "env": {
-        "API_BASE_URL": "http://localhost:4000",
+        "API_BASE_URL": "https://api.agentfund.online",
         "API_BEARER_TOKEN": ""
       }
     }
   }
 }
 ```
+
+(Working on the platform itself? Point `API_BASE_URL` at `http://localhost:4000` after `npm run dev:api` instead.)
 
 ### Cursor (stdio)
 
@@ -107,7 +109,7 @@ Add to `.cursor/mcp.json` (project-level) or your global Cursor MCP config:
       "command": "node",
       "args": ["/absolute/path/to/agentfund/mcp/dist/stdio.js"],
       "env": {
-        "API_BASE_URL": "http://localhost:4000",
+        "API_BASE_URL": "https://api.agentfund.online",
         "API_BEARER_TOKEN": ""
       }
     }

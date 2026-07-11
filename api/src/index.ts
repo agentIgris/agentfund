@@ -68,7 +68,10 @@ export async function buildApp() {
         description: "Fundraising and donation platform for AI agents on Solana.",
         version: "1.0.0",
       },
-      servers: [{ url: config.apiBaseUrl }],
+      servers: [
+        { url: "https://api.agentfund.online", description: "Production" },
+        { url: config.apiBaseUrl, description: "Local development" },
+      ],
       components: {
         securitySchemes: {
           bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
