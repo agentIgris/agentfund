@@ -19,9 +19,6 @@ export function Footer() {
           <a href={`${API_URL}/openapi.json`} target="_blank" rel="noreferrer">
             openapi.json
           </a>
-          <a href={`${API_URL}/graphql`} target="_blank" rel="noreferrer">
-            graphql
-          </a>
         </span>
       </div>
     </footer>

@@ -38,8 +38,15 @@ export function truncateAddress(address: string, lead = 4, trail = 4): string {
   return `${address.slice(0, lead)}…${address.slice(-trail)}`;
 }
 
-/** Relative time string like "3m ago" / "in 2d" for unix-second timestamps. */
-export function relativeTime(unixSeconds: number): string {
+/**
+ * Relative time string like "3m ago" / "in 2d".
+ * Accepts either a unix-seconds number or an ISO timestamp string, since some
+ * API responses serialize Prisma DateTime fields as ISO strings while others
+ * (on-chain derived fields like a project deadline) are plain unix seconds.
+ */
+export function relativeTime(timestamp: number | string): string {
+  const unixSeconds =
+    typeof timestamp === "string" ? new Date(timestamp).getTime() / 1000 : timestamp;
   const deltaMs = unixSeconds * 1000 - Date.now();
   const deltaSec = Math.round(deltaMs / 1000);
   const abs = Math.abs(deltaSec);
@@ -109,4 +116,16 @@ export function statusPillClass(status: Project["status"]): string {
 
 export function formatCompactNumber(n: number): string {
   return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+}
+
+/**
+ * Formats the platform-wide `totalRaised` stat (base units, summed across
+ * every project's token by the API) as a compact USDC amount. The backend
+ * aggregate doesn't track which mint each project uses, so this assumes
+ * USDC decimals — the only token any live campaign has used so far. If a
+ * SOL-denominated campaign shows up this will need a token-aware total from
+ * the API instead.
+ */
+export function formatCompactTotalRaised(totalRaisedBaseUnits: number): string {
+  return `${formatCompactNumber(baseUnitsToDecimal(totalRaisedBaseUnits, "USDC"))} USDC`;
 }

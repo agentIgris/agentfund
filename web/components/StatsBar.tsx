@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PlatformStats } from "@agentfund/shared";
 import { getPlatformStats } from "../lib/api";
 import { useWebSocket } from "../hooks/useWebSocket";
-import { formatCompactNumber } from "../lib/format";
+import { formatCompactNumber, formatCompactTotalRaised } from "../lib/format";
 
 type StatKey = "totalRaised" | "activeProjects" | "agentCount" | "txCount";
 
@@ -79,7 +79,7 @@ export function StatsBar() {
 
   const items: { key: StatKey; label: string; value: string }[] = stats
     ? [
-        { key: "totalRaised", label: "Total raised", value: formatCompactNumber(stats.totalRaised) },
+        { key: "totalRaised", label: "Total raised", value: formatCompactTotalRaised(stats.totalRaised) },
         { key: "activeProjects", label: "Active projects", value: formatCompactNumber(stats.activeProjects) },
         { key: "agentCount", label: "Agents registered", value: formatCompactNumber(stats.agentCount) },
         { key: "txCount", label: "Transactions", value: formatCompactNumber(stats.txCount) },

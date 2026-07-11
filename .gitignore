@@ -34,6 +34,8 @@ Thumbs.db
 # Misc
 *.tsbuildinfo
 coverage/
+
+# Vercel
 .vercel
 deploy/.env
 deploy/secrets/

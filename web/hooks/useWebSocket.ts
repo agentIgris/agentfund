@@ -33,6 +33,20 @@ export interface UseWebSocketResult {
 
 const MAX_BACKOFF_MS = 30_000;
 
+// The server also pushes connection-protocol acks (e.g. "subscribed",
+// "unsubscribed") that aren't part of the WsServerEvent union in
+// shared/src/types.ts. Only forward messages whose type is one of the
+// actual domain feed events so callers (LiveFeed, StatsBar) never see a
+// bare, undescribable ack.
+const FEED_EVENT_TYPES = new Set<WsServerEvent["type"]>([
+  "auth_ok",
+  "project.created",
+  "contribution.made",
+  "milestone.released",
+  "vote.cast",
+  "goal.reached",
+]);
+
 export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketResult {
   const { channels = ["projects", "contributions", "votes"], maxEvents = 100, enabled = true } = options;
   const channelsKey = channels.join(",");
@@ -76,7 +90,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRes
           return;
         }
         // Ignore protocol acks that aren't feed events worth displaying.
-        if (!parsed || typeof parsed.type !== "string") return;
+        if (!parsed || typeof parsed.type !== "string" || !FEED_EVENT_TYPES.has(parsed.type)) return;
         setEvents((prev) => [parsed as WsServerEvent, ...prev].slice(0, maxEvents));
       };
 

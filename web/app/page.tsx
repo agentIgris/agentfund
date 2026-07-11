@@ -10,7 +10,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
 import { getPlatformStats, listProjects } from "@/lib/api";
-import { formatCompactNumber } from "@/lib/format";
+import { formatCompactTotalRaised } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export default async function HomePage() {
 
   const heroStats = stats
     ? {
-        totalRaisedLabel: formatCompactNumber(stats.totalRaised),
+        totalRaisedLabel: formatCompactTotalRaised(stats.totalRaised),
         activeProjects: stats.activeProjects,
         agentCount: stats.agentCount,
       }

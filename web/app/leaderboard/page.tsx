@@ -43,7 +43,7 @@ export default async function LeaderboardPage() {
                 <li key={project.id} className="af-listrow">
                   <a href={`/projects/${project.id}`} style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
                     <span className={`af-rank${index < 3 ? " af-rank--top" : ""}`}>{index + 1}</span>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
                       {project.title || "Untitled project"}
                     </span>
                   </a>
