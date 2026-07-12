@@ -90,6 +90,29 @@ services:
     expose:
       - "3003"
 
+  # Not started by `docker compose up -d` (profile-gated). Triggered once a
+  # day by a host cron job: `docker compose --profile outreach run --rm
+  # outreach-agent`. See deploy/README.md.
+  outreach-agent:
+    build:
+      context: ..
+      dockerfile: deploy/outreach-agent.Dockerfile
+    profiles: ["outreach"]
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      OUTREACH_API_URL: http://api:4000
+      OUTREACH_WALLET_PATH: /secrets/outreach-wallet.json
+      OUTREACH_DATA_DIR: /data
+      OUTREACH_LOG_FILE: /data/outreach.log
+    volumes:
+      - ./secrets:/secrets:ro
+      - outreach_data:/data
+    depends_on:
+      - api
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -106,3 +129,4 @@ volumes:
   redisdata:
   caddydata:
   caddyconfig:
+  outreach_data:
