@@ -81,7 +81,10 @@ export async function fetchIpfsJson<T = Record<string, unknown>>(ipfsHash: strin
  */
 export async function resolveMetadataJson<T = Record<string, unknown>>(ref: string): Promise<T> {
   if (ref.startsWith("https://") || ref.startsWith("http://")) {
-    const [url, fragment] = ref.split("#", 2);
+    // Default keeps `url` typed as `string` (not `string | undefined`) under
+    // noUncheckedIndexedAccess — split() on a non-empty separator always
+    // returns at least one element, so the default never actually triggers.
+    const [url = ref, fragment] = ref.split("#", 2);
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Failed to fetch metadata at ${url}: ${res.status}`);
