@@ -10,7 +10,7 @@
 import { ProjectStatus } from "@agentfund/shared";
 import { prisma } from "../lib/prisma.js";
 import { broker } from "./broker.js";
-import { fetchIpfsJson, type ProjectMetadata } from "./ipfs.js";
+import { resolveMetadataJson, type ProjectMetadata } from "./ipfs.js";
 import { applyReputationEvent } from "./reputationWriter.js";
 
 /**
@@ -35,6 +35,25 @@ export interface RawProgramEvent<T = Record<string, unknown>> {
 
 function toDate(unixSeconds: number | string | bigint): Date {
   return new Date(Number(unixSeconds) * 1000);
+}
+
+/**
+ * Backfills milestone display descriptions from project metadata onto
+ * whatever milestone rows already exist. `updateMany` is a no-op for
+ * indexes without a row yet — escrow events create those rows later, and
+ * a metadata refresh (ProjectMetadataUpdated replay) fills them in on
+ * re-seed.
+ */
+async function applyMilestoneDescriptions(
+  projectId: string,
+  meta: ProjectMetadata,
+): Promise<void> {
+  for (const m of meta.milestones ?? []) {
+    await prisma.milestone.updateMany({
+      where: { projectId, index: m.index },
+      data: { description: m.description },
+    });
+  }
 }
 
 /**
@@ -107,7 +126,7 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
 
     let meta: ProjectMetadata = { title: d.project, description: "" };
     try {
-      meta = await fetchIpfsJson<ProjectMetadata>(d.ipfsHash);
+      meta = await resolveMetadataJson<ProjectMetadata>(d.ipfsHash);
     } catch {
       // Metadata unavailable yet (IPFS propagation lag) — fall back to a
       // placeholder; a future re-index / manual refresh can backfill it.
@@ -143,6 +162,8 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
       update: {},
     });
 
+    await applyMilestoneDescriptions(d.project, meta);
+
     await broker.publish("projects", {
       type: "project.created",
       data: {
@@ -162,6 +183,45 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
     await prisma.project.update({
       where: { id: d.project },
       data: { status: d.newStatus as ProjectStatus },
+    });
+    return;
+  }
+
+  if (program === "agent_registry" && eventName === "ProjectMetadataUpdated") {
+    const d = data as {
+      project: string;
+      oldIpfsHash: string;
+      newIpfsHash: string;
+      changedBy: string;
+      timestamp: number;
+    };
+
+    // Re-resolve display metadata from the new reference. Unlike
+    // ProjectCreated there is no propagation-lag fallback: an explicit
+    // metadata update whose content can't be fetched should fail loudly
+    // (indexEvent un-marks the event so a redelivery retries), never
+    // silently blank out the project's display fields.
+    const meta = await resolveMetadataJson<ProjectMetadata>(d.newIpfsHash);
+
+    await prisma.project.update({
+      where: { id: d.project },
+      data: {
+        ipfsHash: d.newIpfsHash,
+        title: meta.title,
+        description: meta.description,
+        image: meta.image,
+        category: meta.category,
+        repoUrl: meta.repoUrl,
+        website: meta.website,
+        twitter: meta.twitter,
+      },
+    });
+
+    await applyMilestoneDescriptions(d.project, meta);
+
+    await broker.publish("projects", {
+      type: "project.updated",
+      data: { id: d.project, title: meta.title, changedBy: d.changedBy },
     });
     return;
   }

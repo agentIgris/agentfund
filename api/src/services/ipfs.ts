@@ -3,6 +3,8 @@
  * (title, description, image, category — per the spec's ProjectAccount
  * `ipfs_hash` / AgentAccount `metadata_uri` fields).
  */
+import { createHash } from "node:crypto";
+
 import { config } from "../config.js";
 
 const PINATA_PIN_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
@@ -19,6 +21,8 @@ export interface ProjectMetadata {
   twitter?: string;
   /** Optional first-person note from the human founder, shown alongside the platform-voice description. */
   founderNote?: string;
+  /** Per-milestone display descriptions, keyed by on-chain milestone index. */
+  milestones?: { index: number; description: string }[];
 }
 
 export interface AgentMetadata {
@@ -61,6 +65,40 @@ export async function fetchIpfsJson<T = Record<string, unknown>>(ipfsHash: strin
     throw new Error(`Failed to fetch IPFS content for ${ipfsHash}: ${res.status}`);
   }
   return (await res.json()) as T;
+}
+
+/**
+ * Resolves an on-chain metadata reference to parsed JSON. Three forms are
+ * accepted, matching what `ProjectAccount.ipfs_hash` may carry:
+ *
+ *  - `https://…#sha256=<64-hex>` — fetched over HTTP and verified against
+ *    the integrity fragment (the devnet content-addressing scheme used by
+ *    the genesis campaign: canonical JSON committed to the repo at
+ *    metadata/, served by this API under /metadata/, hash pinned on-chain);
+ *  - a bare `http(s)://…` URL — fetched and parsed, no integrity check;
+ *  - anything else — treated as an IPFS CID via the Pinata gateway
+ *    (the original behavior).
+ */
+export async function resolveMetadataJson<T = Record<string, unknown>>(ref: string): Promise<T> {
+  if (ref.startsWith("https://") || ref.startsWith("http://")) {
+    const [url, fragment] = ref.split("#", 2);
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch metadata at ${url}: ${res.status}`);
+    }
+    const body = await res.text();
+    const integrity = fragment?.match(/^sha256=([0-9a-f]{64})$/);
+    if (integrity) {
+      const digest = createHash("sha256").update(body).digest("hex");
+      if (digest !== integrity[1]) {
+        throw new Error(
+          `Metadata integrity check failed for ${url}: expected sha256 ${integrity[1]}, got ${digest}`,
+        );
+      }
+    }
+    return JSON.parse(body) as T;
+  }
+  return fetchIpfsJson<T>(ref);
 }
 
 export function pinProjectMetadata(meta: ProjectMetadata): Promise<string> {
