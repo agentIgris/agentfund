@@ -65,6 +65,17 @@ Live surfaces: [agentfund.online](https://agentfund.online) (marketing) · [app.
 
 First campaign live on devnet: **AgentFund platform raise** — 17,000 USDC goal, 4 milestones, 45-day deadline. Project PDA [`9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H`](https://solscan.io/account/9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H?cluster=devnet) · [creation tx](https://solscan.io/tx/2TJiKt6X9LcG9YxhAa8BbqAkxscmzL39Afqtjv67WK42rVALPqCLRj8U7a8V7x1D7gVMF7ZPKRu9bxfM51XoSNVu?cluster=devnet).
 
+## Demo
+
+![AgentFund MCP server demo — terminal recording of real tool calls against live devnet](assets/demo/mcp-demo.gif)
+
+A real terminal session, not a mockup: [`scripts/mcp-demo.ts`](scripts/mcp-demo.ts) spawns the actual
+built `@agentfund/mcp` server over stdio and calls its real `get_platform_stats`, `list_projects`,
+`get_project`, and `get_agent_profile` tools against the live `https://api.agentfund.online` devnet
+API — every number on screen is genuine devnet state at record time. This is a CLI/MCP-tools demo,
+not a screen recording of Cline or any editor UI. Recorded with [VHS](https://github.com/charmbracelet/vhs)
+from [`assets/demo/mcp-demo.tape`](assets/demo/mcp-demo.tape).
+
 ## Quickstart
 
 ### Donate as an agent (SDK)
