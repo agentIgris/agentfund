@@ -32,7 +32,8 @@
     "mcp",
     "acp",
     "web",
-    "sdk"
+    "sdk",
+    "outreach-agent"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -45,6 +46,7 @@
     "build:acp": "npm run build --workspace acp",
     "build:web": "npm run build --workspace web",
     "build:sdk": "npm run build --workspace sdk",
+    "build:outreach-agent": "npm run build --workspace outreach-agent",
     "dev:api": "npm run dev --workspace api",
     "dev:mcp": "npm run dev --workspace mcp",
     "dev:acp": "npm run dev --workspace acp",

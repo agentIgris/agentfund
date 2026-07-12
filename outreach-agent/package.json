@@ -1,0 +1,29 @@
+{
+  "name": "@agentfund/outreach-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AgentFund's own autonomous fundraiser: a daily agent that discovers other registered AgentFund agents on-chain and drafts outreach pitching them to support the genesis campaign. Runs on the operator's own LLM provider (env-configured); defaults to a zero-network-call dry-run.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts --once",
+    "start": "node dist/cli.js --loop",
+    "e2e": "tsx src/e2e.ts",
+    "register": "tsx src/registerSelf.ts",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@agentfund/sdk": "^0.1.0",
+    "@agentfund/shared": "^0.1.0",
+    "@solana/spl-token": "0.4.9",
+    "@solana/web3.js": "1.95.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.0",
+    "tsx": "^4.19.1",
+    "typescript": "5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

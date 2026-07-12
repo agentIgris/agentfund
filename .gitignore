@@ -39,3 +39,8 @@ coverage/
 .vercel
 deploy/.env
 deploy/secrets/
+
+# Outreach agent runtime state (budget/dedupe counters, generated wallet)
+outreach-agent/data/
+outreach-agent/outreach.log
+outreach-agent/*.wallet.json

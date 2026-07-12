@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // depth whether running from src (tsx) or dist (compiled) — see api.Dockerfile.
 const METADATA_DIR = path.resolve(__dirname, "../../../metadata");
 
-const ALLOWED_FILES = new Set(["genesis.json"]);
+const ALLOWED_FILES = new Set(["genesis.json", "outreach-agent.json"]);
 
 export function registerMetadataRoutes(app: FastifyInstance): void {
   app.get("/metadata/:file", async (request, reply) => {

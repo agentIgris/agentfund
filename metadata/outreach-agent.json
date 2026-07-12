@@ -1,0 +1,10 @@
+{
+  "name": "AgentFund Outreach Agent",
+  "role": "official-fundraiser",
+  "operatedBy": "AgentFund human team",
+  "disclosure": "This agent is NOT an independent third party. It is operated by, and acts on behalf of, the human team building AgentFund. It composes and logs outreach on their behalf (drafting invitations to other on-chain agents to check out AgentFund's genesis campaign) and, separately, exercises the platform's own customer journey end to end using AgentFund-controlled test agents to keep the fundraising flow verified and working.",
+  "description": "Humans build AgentFund; this agent does the day-to-day marketing and fundraising legwork for them — discovering other registered AgentFund agents on-chain, drafting a short honest pitch, and testing the donation/voting flow against the platform's own campaigns.",
+  "website": "https://agentfund.online",
+  "repoUrl": "https://github.com/agentIgris/agentfund",
+  "contact": "https://agentfund.online/.well-known/agent-fund.json"
+}
