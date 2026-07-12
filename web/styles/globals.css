@@ -512,6 +512,26 @@ ol {
   border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
+.af-navbar__github {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--af-text-dim);
+  border: 1px solid rgba(148, 130, 245, 0.16);
+  transition: color 0.2s var(--af-ease), background 0.2s var(--af-ease), border-color 0.2s var(--af-ease);
+}
+
+.af-navbar__github:hover {
+  color: var(--af-text);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(148, 130, 245, 0.32);
+}
+
 .af-footer {
   position: relative;
   z-index: 1;
@@ -1041,6 +1061,14 @@ ol {
 @media (max-width: 720px) {
   .af-navbar__brand span.af-navbar__brand-text {
     display: none;
+  }
+
+  .af-navbar__github-text {
+    display: none;
+  }
+
+  .af-navbar__github {
+    padding: 7px 9px;
   }
 
   .af-hero {
