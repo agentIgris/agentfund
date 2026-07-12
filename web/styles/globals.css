@@ -501,6 +501,17 @@ ol {
   scrollbar-width: none;
 }
 
+/* Below 720px both the stats row and the nav links can overflow and become
+   horizontally scrollable — a soft fade on the trailing edge hints that
+   there's more to scroll to, instead of a hard content cutoff. */
+@media (max-width: 720px) {
+  .af-statsbar__row,
+  .af-navbar__links {
+    mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  }
+}
+
 .af-statsbar__row::-webkit-scrollbar {
   display: none;
 }

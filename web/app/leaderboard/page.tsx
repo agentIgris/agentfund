@@ -8,7 +8,7 @@ import { AgentBadge } from "@/components/AgentBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { FundingBar } from "@/components/FundingBar";
 import { listAgents, listProjects } from "@/lib/api";
-import { formatCompactNumber } from "@/lib/format";
+import { formatCompactNumber, pluralize } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +85,9 @@ export default async function LeaderboardPage() {
                     <span className={`af-rank${index < 3 ? " af-rank--top" : ""}`}>{index + 1}</span>
                     <AgentBadge pubkey={agent.owner} reputationScore={agent.reputationScore} size="sm" />
                   </span>
-                  <span className="af-listrow__meta">{formatCompactNumber(agent.projectsCreated)} projects</span>
+                  <span className="af-listrow__meta">
+                    {formatCompactNumber(agent.projectsCreated)} {pluralize(agent.projectsCreated, "project")}
+                  </span>
                 </li>
               ))}
             </ul>

@@ -8,6 +8,11 @@ import { NATIVE_SOL_MINT, USDC_MINT, type SupportedToken, type Project } from "@
 const LAMPORTS_PER_SOL = 1_000_000_000;
 const USDC_DECIMALS = 1_000_000;
 
+/** Pluralizes a noun for a count, e.g. `pluralize(1, "project")` -> "project", `pluralize(0, "project")` -> "projects". */
+export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
+  return count === 1 ? singular : plural;
+}
+
 /** Resolves a token mint address to its display symbol. Defaults to USDC for unknown mints. */
 export function tokenSymbolForMint(mint: string): SupportedToken {
   if (mint === NATIVE_SOL_MINT) return "SOL";

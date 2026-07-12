@@ -8,7 +8,7 @@ import Link from "next/link";
 import { AgentBadge } from "@/components/AgentBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { listAgents, type ListAgentsParams } from "@/lib/api";
-import { formatCompactNumber } from "@/lib/format";
+import { formatCompactNumber, pluralize } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +77,9 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
                   <AgentBadge pubkey={agent.owner} reputationScore={agent.reputationScore} />
                 </span>
                 <span className="af-listrow__meta">
-                  <span>{formatCompactNumber(agent.projectsCreated)} projects</span>
+                  <span>
+                    {formatCompactNumber(agent.projectsCreated)} {pluralize(agent.projectsCreated, "project")}
+                  </span>
                   {/* totalContributed sums raw base units across every token an agent has
                       contributed with (lamports + micro-USDC alike) — not a real currency
                       amount, so it's deliberately not formatted as one. Title attribute
