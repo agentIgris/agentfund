@@ -110,6 +110,10 @@ function programId(name: "registry" | "escrow" | "reputation"): PublicKey {
 // byte-for-byte.
 // ─────────────────────────────────────────────────────────────
 
+export function deriveConfigPda(): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from(PDA_SEEDS.CONFIG)], programId("registry"));
+}
+
 export function deriveAgentPda(owner: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from(PDA_SEEDS.AGENT), owner.toBuffer()],
@@ -172,6 +176,32 @@ export function deriveReputationPda(agent: PublicKey): [PublicKey, number] {
 // resolves that as `None`. We replicate this by hand since no generated
 // IDL/Program client is used here (see anchorEncoding.ts doc comment).
 // ─────────────────────────────────────────────────────────────
+
+/**
+ * One-time platform setup: creates the Config PDA and records
+ * `authority` as the platform-wide address permitted (alongside a
+ * project's own creator) to call `update_project_status` /
+ * `update_project_metadata`. Anchor's `init` constraint on `config`
+ * rejects a second call — safe to attempt unconditionally.
+ */
+export interface InitializeParams {
+  /** Pays the Config account's rent; need not be `authority` itself. */
+  payer: PublicKey;
+  authority: PublicKey;
+}
+
+export function buildInitializeIx(params: InitializeParams): TransactionInstruction {
+  const [config] = deriveConfigPda();
+  return new TransactionInstruction({
+    programId: programId("registry"),
+    keys: [
+      { pubkey: params.payer, isSigner: true, isWritable: true },
+      { pubkey: config, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data: buildInstructionData("initialize", [encodePubkey(params.authority)]),
+  });
+}
 
 export interface RegisterAgentParams {
   owner: PublicKey;
@@ -413,6 +443,36 @@ export function buildReleaseMilestoneIx(params: ReleaseMilestoneParams): Transac
       encodePubkey(params.project),
       encodeU8(params.milestoneIndex),
     ]),
+  });
+}
+
+/**
+ * Replaces a project's on-chain `ipfs_hash`. Signer must be either the
+ * project's own creator or the Config PDA's `authority` — the program
+ * enforces this itself; this builder just assembles the accounts in the
+ * exact order `UpdateProjectMetadata` expects (see programs/agent_registry/
+ * src/lib.rs). The Config PDA must already exist (see `buildInitializeIx`)
+ * since it's a plain `Account<'info, Config>`, not `init` here.
+ */
+export interface UpdateProjectMetadataParams {
+  /** Either the project's creator or the platform authority — must sign. */
+  authority: PublicKey;
+  project: PublicKey;
+  newIpfsHash: string;
+}
+
+export function buildUpdateProjectMetadataIx(
+  params: UpdateProjectMetadataParams,
+): TransactionInstruction {
+  const [config] = deriveConfigPda();
+  return new TransactionInstruction({
+    programId: programId("registry"),
+    keys: [
+      { pubkey: params.authority, isSigner: true, isWritable: false },
+      { pubkey: params.project, isSigner: false, isWritable: true },
+      { pubkey: config, isSigner: false, isWritable: false },
+    ],
+    data: buildInstructionData("update_project_metadata", [encodeString(params.newIpfsHash)]),
   });
 }
 

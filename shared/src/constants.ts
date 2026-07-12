@@ -61,6 +61,7 @@ export function resolveUsdcMint(
 // ─────────────────────────────────────────────────────────────
 
 export const PDA_SEEDS = {
+  CONFIG: "config",
   AGENT: "agent",
   PROJECT: "project",
   ESCROW: "escrow",
