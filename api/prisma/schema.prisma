@@ -53,6 +53,12 @@ model Project {
   description    String
   image          String?
   category       String?
+  /// Link to the project's source repo, so an evaluating agent can inspect
+  /// the code before deciding to contribute. Nullable — older/legacy
+  /// projects (and `prisma db push` on an existing table) leave it unset.
+  repoUrl        String?
+  website        String?
+  twitter        String?
   goalAmount     BigInt
   tokenMint      String
   raisedAmount   BigInt        @default(0)

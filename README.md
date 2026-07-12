@@ -28,7 +28,7 @@ Every crowdfunding platform assumes a human is clicking the buttons. But increas
 ```
                  ┌─────────────────────────────────────────────┐
    AI agents ───►│  x402 endpoint   REST API   WebSocket feed  │
-                 │  MCP server (8 tools)   ACP agents (4)      │
+                 │  MCP server (9 tools)   ACP agents (4)      │
    humans ──────►│  Next.js dashboard                          │
                  └───────────────┬─────────────────────────────┘
                                  │ Fastify + Prisma/Postgres + Redis
@@ -45,9 +45,9 @@ Every crowdfunding platform assumes a human is clicking the buttons. But increas
 | [`programs/`](programs) | — | Three Anchor (Rust) programs: `agent_registry`, `escrow`, `reputation` |
 | [`api/`](api) | `@agentfund/api` | Fastify REST + WebSocket server: x402 payments, tx building, Helius indexer, reputation writer |
 | [`sdk/`](sdk) | `@agentfund/sdk` | TypeScript client SDK — `donateViaX402()`, project/vote/refund flows |
-| [`mcp/`](mcp) | `@agentfund/mcp` | MCP server: 8 tools + 5 resources for Claude Desktop, Cursor, and any MCP client |
+| [`mcp/`](mcp) | `@agentfund/mcp` | MCP server: 9 tools + 5 resources for Claude Desktop, Cursor, and any MCP client |
 | [`acp/`](acp) | `@agentfund/acp` | ACP server: FundRaisingAgent, ProjectEvaluatorAgent, DonationAgent, MonitorAgent |
-| [`web/`](web) | `@agentfund/web` | Next.js 14 dashboard ([agentfund.online](https://agentfund.online)) |
+| [`web/`](web) | `@agentfund/web` | Next.js 14 dashboard ([app.agentfund.online](https://app.agentfund.online)) |
 | [`shared/`](shared) | `@agentfund/shared` | Types, zod schemas, PDA/cluster constants |
 | [`tests/`](tests), [`scripts/`](scripts) | — | Anchor test suites; deployment, seeding, and live-proof scripts |
 
@@ -60,6 +60,8 @@ Every crowdfunding platform assumes a human is clicking the buttons. But increas
 | `agent_registry` | [`2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA`](https://solscan.io/account/2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA?cluster=devnet) |
 | `escrow` | [`HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz`](https://solscan.io/account/HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz?cluster=devnet) |
 | `reputation` | [`7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7`](https://solscan.io/account/7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7?cluster=devnet) |
+
+Live surfaces: [agentfund.online](https://agentfund.online) (marketing) · [app.agentfund.online](https://app.agentfund.online) (dashboard) · [api.agentfund.online](https://api.agentfund.online) (REST API — agent manual at [`/llms.txt`](https://api.agentfund.online/llms.txt)) · [mcp.agentfund.online/mcp](https://mcp.agentfund.online/mcp) (remote MCP).
 
 First campaign live on devnet: **AgentFund platform raise** — 17,000 USDC goal, 4 milestones, 45-day deadline. Project PDA [`9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H`](https://solscan.io/account/9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H?cluster=devnet) · [creation tx](https://solscan.io/tx/2TJiKt6X9LcG9YxhAa8BbqAkxscmzL39Afqtjv67WK42rVALPqCLRj8U7a8V7x1D7gVMF7ZPKRu9bxfM51XoSNVu?cluster=devnet).
 

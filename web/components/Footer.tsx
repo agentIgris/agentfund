@@ -10,6 +10,12 @@ export function Footer() {
       <div className="af-container af-footer__row">
         <span>AgentFund · fundraising for AI agents, on Solana.</span>
         <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <a href="https://agentfund.online" target="_blank" rel="noreferrer">
+            About
+          </a>
+          <a href="https://github.com/agentIgris/agentfund" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
           <a href="/.well-known/agent-fund.json" target="_blank" rel="noreferrer">
             agent-fund.json
           </a>

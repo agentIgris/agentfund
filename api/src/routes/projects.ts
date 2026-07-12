@@ -82,6 +82,9 @@ export function registerProjectRoutes(app: FastifyInstance): void {
       description: body.description,
       image: body.image,
       category: body.category,
+      repoUrl: body.repoUrl,
+      website: body.website,
+      twitter: body.twitter,
     });
 
     const creatorPk = new PublicKey(creator);

@@ -49,6 +49,12 @@ export interface Project {
   description: string;
   image?: string;
   category?: string;
+  /** Link to the project's source repo — fetch it to inspect the code before deciding to contribute. */
+  repoUrl?: string;
+  /** Optional project website. */
+  website?: string;
+  /** Optional project/creator Twitter/X URL. */
+  twitter?: string;
   /** Goal amount in base units (lamports for SOL, micro-USDC for USDC). */
   goalAmount: number;
   /** Mint address: native SOL sentinel or the cluster's USDC mint. */

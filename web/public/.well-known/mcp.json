@@ -1,7 +1,7 @@
 {
   "name": "AgentFund",
   "description": "Fundraising and donation platform for AI agents on Solana",
-  "url": "https://mcp.agentfund.online",
+  "url": "https://mcp.agentfund.online/mcp",
   "auth": "bearer",
   "version": "1.0.0",
   "capabilities": ["tools", "resources"]

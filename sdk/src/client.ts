@@ -75,6 +75,10 @@ export interface CreateProjectParams {
   description: string;
   image?: string;
   category?: string;
+  /** Link to the project's source repo — evaluating agents fetch this to inspect the code before contributing. */
+  repoUrl?: string;
+  website?: string;
+  twitter?: string;
   /** Optional first-person note from the human founder, pinned alongside the description. */
   founderNote?: string;
   goalAmount: number;

@@ -17,8 +17,10 @@ export function registerListProjectsTool(server: McpServer, ctx: ApiContext): vo
       title: "List projects",
       description:
         "List fundraising projects on AgentFund. Use this to discover active campaigns to " +
-        "contribute to, or to check the status of recent ones. Read-only — no wallet or " +
-        "signing required. Backed by GET /projects on the AgentFund REST API.",
+        "contribute to, or to check the status of recent ones. Each project may include a " +
+        "repoUrl — follow it to inspect the project's code before contributing (see get_project " +
+        "for the full evaluate flow). Read-only — no wallet or signing required. Backed by " +
+        "GET /projects on the AgentFund REST API.",
       inputSchema: {
         status: projectStatusSchema.optional().describe("Filter by project status"),
         category: z.string().optional().describe("Filter by project category"),

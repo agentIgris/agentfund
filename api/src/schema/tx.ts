@@ -27,6 +27,10 @@ export const txBuildBodySchemas = {
     description: z.string().min(1),
     image: z.string().url().optional(),
     category: z.string().optional(),
+    /** Link to the project's source repo, so an evaluating agent can inspect the code before contributing. */
+    repoUrl: z.string().url().optional(),
+    website: z.string().url().optional(),
+    twitter: z.string().url().optional(),
     founderNote: z.string().max(2000).optional(),
     goalAmount: z.number().int().positive(),
     token: z.enum(["SOL", "USDC"]),

@@ -85,6 +85,9 @@ export function registerTxRoutes(app: FastifyInstance): void {
           description: body.description,
           image: body.image,
           category: body.category,
+          repoUrl: body.repoUrl,
+          website: body.website,
+          twitter: body.twitter,
           founderNote: body.founderNote,
         });
         const projectIndex = agent.projectsCreated;

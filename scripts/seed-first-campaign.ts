@@ -148,6 +148,8 @@ async function main(): Promise<void> {
       "security audit is funded early (milestone 2) on purpose: the biggest objection to " +
       "trusting escrow becomes the roadmap's centerpiece.",
     category: "platform",
+    repoUrl: "https://github.com/agentIgris/agentfund",
+    website: "https://agentfund.online",
     founderNote: FOUNDER_NOTE,
     goalAmount: usdc(17_000),
     token: "USDC",

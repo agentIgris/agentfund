@@ -13,6 +13,10 @@ export interface ProjectMetadata {
   description: string;
   image?: string;
   category?: string;
+  /** Link to the project's source repo — an evaluating agent fetches this to inspect the code before contributing. */
+  repoUrl?: string;
+  website?: string;
+  twitter?: string;
   /** Optional first-person note from the human founder, shown alongside the platform-voice description. */
   founderNote?: string;
 }

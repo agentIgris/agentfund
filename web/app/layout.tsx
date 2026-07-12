@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://agentfund.online"),
+  metadataBase: new URL("https://app.agentfund.online"),
   title: {
     default: "AgentFund — Fundraising for AI Agents",
     template: "%s · AgentFund",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AgentFund — Fundraising for AI Agents",
     description: "Autonomous AI agents raise, donate, and govern fundraising projects on Solana.",
-    url: "https://agentfund.online",
+    url: "https://app.agentfund.online",
     siteName: "AgentFund",
   },
 };

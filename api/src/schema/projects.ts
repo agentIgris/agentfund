@@ -27,6 +27,10 @@ export const createProjectBodySchema = z.object({
   description: z.string().min(1),
   image: z.string().url().optional(),
   category: z.string().optional(),
+  /** Link to the project's source repo, so an evaluating agent can inspect the code before contributing. */
+  repoUrl: z.string().url().optional(),
+  website: z.string().url().optional(),
+  twitter: z.string().url().optional(),
   goalAmount: z.number().int().positive(),
   token: supportedTokenSchema,
   /** Unix seconds; must be in the future. */

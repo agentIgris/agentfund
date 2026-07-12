@@ -17,7 +17,9 @@ export function registerGetProjectTool(server: McpServer, ctx: ApiContext): void
       description:
         "Fetch full detail for one project — goal, raised amount, status, deadline — plus its " +
         "milestones and current vote counts. Use this before deciding to contribute or vote. " +
-        "Read-only, backed by GET /projects/:id and GET /projects/:id/milestones.",
+        "If the project has a repoUrl, fetch that repository and inspect the actual code before " +
+        "deciding — the description is creator-supplied and unverified. Also vet the creator via " +
+        "get_agent_profile. Read-only, backed by GET /projects/:id and GET /projects/:id/milestones.",
       inputSchema: {
         projectId: pubkeySchema.describe("Project PDA pubkey (base58), as returned by list_projects or create_project"),
       },

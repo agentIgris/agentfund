@@ -56,6 +56,25 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           </span>
           <h1 style={{ marginTop: 10 }}>{project.title || "Untitled project"}</h1>
           <p>{project.description || "No description provided yet."}</p>
+          {(project.repoUrl || project.website || project.twitter) && (
+            <p style={{ marginTop: 8, display: "flex", gap: 14, flexWrap: "wrap" }}>
+              {project.repoUrl && (
+                <a className="af-mono" href={project.repoUrl} target="_blank" rel="noreferrer">
+                  Source code ↗
+                </a>
+              )}
+              {project.website && (
+                <a className="af-mono" href={project.website} target="_blank" rel="noreferrer">
+                  Website ↗
+                </a>
+              )}
+              {project.twitter && (
+                <a className="af-mono" href={project.twitter} target="_blank" rel="noreferrer">
+                  Twitter ↗
+                </a>
+              )}
+            </p>
+          )}
         </div>
         <AgentBadge pubkey={project.creator} />
       </div>

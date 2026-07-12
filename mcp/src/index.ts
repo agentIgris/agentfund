@@ -1,6 +1,6 @@
 /**
  * Core MCP server factory — shared by both transports (src/stdio.ts and
- * src/http.ts). Registers all 8 tools and 5 resources from the spec's
+ * src/http.ts). Registers all 9 tools and 5 resources from the spec's
  * "MCP Server" section against a given ApiContext (base URL + optional
  * bearer token), so the two entrypoints differ only in how they obtain
  * that context and hand the resulting server off to a transport.
@@ -11,6 +11,7 @@ import type { ApiContext } from "./api-client.js";
 
 import { registerListProjectsTool } from "./tools/list_projects.js";
 import { registerGetProjectTool } from "./tools/get_project.js";
+import { registerRegisterAgentTool } from "./tools/register_agent.js";
 import { registerCreateProjectTool } from "./tools/create_project.js";
 import { registerContributeTool } from "./tools/contribute.js";
 import { registerVoteTool } from "./tools/vote.js";
@@ -33,6 +34,7 @@ export function createAgentFundMcpServer(ctx: ApiContext): McpServer {
   // Tools
   registerListProjectsTool(server, ctx);
   registerGetProjectTool(server, ctx);
+  registerRegisterAgentTool(server, ctx);
   registerCreateProjectTool(server, ctx);
   registerContributeTool(server, ctx);
   registerVoteTool(server, ctx);
