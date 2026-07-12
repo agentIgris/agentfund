@@ -12,6 +12,7 @@ COPY api/package.json api/
 RUN npm ci --workspace=shared --workspace=api
 COPY shared/ shared/
 COPY api/ api/
+COPY metadata/ metadata/
 RUN npm run build --workspace=shared && npm run build --workspace=api
 
 FROM node:20-bookworm-slim

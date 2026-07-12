@@ -21,6 +21,7 @@ import { registerX402Routes } from "./routes/x402.js";
 import { registerWebhookRoutes, startWebhookDeliveryWorker, startWebhookDispatcher } from "./routes/webhooks.js";
 import { registerMetaRoutes } from "./routes/meta.js";
 import { registerWellKnownRoutes } from "./routes/wellKnown.js";
+import { registerMetadataRoutes } from "./routes/metadata.js";
 import { registerWebSocketServer } from "./ws/server.js";
 
 const DEFAULT_BROKER_CHANNELS = ["projects", "contributions", "votes"] as const;
@@ -82,6 +83,7 @@ export async function buildApp() {
   });
 
   registerWellKnownRoutes(app);
+  registerMetadataRoutes(app);
   registerAuthRoutes(app);
   registerProjectRoutes(app);
   registerAgentRoutes(app);
