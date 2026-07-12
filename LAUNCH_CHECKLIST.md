@@ -8,20 +8,7 @@ Compiled by the integration agent from all seven build agents' reports. Everythi
 
 1. **Revoke the two npm tokens that were pasted in chat.** Go to https://www.npmjs.com/settings/~/tokens (or your org's tokens page) → find any token you pasted into this conversation → **Revoke**. Do this immediately regardless of anything else below — those tokens must be treated as compromised.
 
-2. **DNS for agentfund.online → GitHub Pages.** ✅ Resolved — the landing page is live at https://agentfund.online. Left below for reference/re-verification:
-   - Apex `A` records (four, all pointing agentfund.online to GitHub Pages):
-     ```
-     agentfund.online.   A   185.199.108.153
-     agentfund.online.   A   185.199.109.153
-     agentfund.online.   A   185.199.110.153
-     agentfund.online.   A   185.199.111.153
-     ```
-   - `www` subdomain (optional but recommended):
-     ```
-     www.agentfund.online.   CNAME   agentIgris.github.io.
-     ```
-   - Propagation can take up to 24h. Verify with: `dig agentfund.online +noall +answer` (should show the four IPs above).
-   - Once DNS resolves, re-run step 5 below (`gh api repos/agentIgris/agentfund/pages -X PUT -f cname=agentfund.online`) if it failed the first time — GitHub Pages requires the DNS to already point at it before it will accept the custom domain.
+2. **DNS for agentfund.online → Vercel.** ✅ Resolved — the landing page is live at https://agentfund.online, served by the Vercel project `agentfund-site` (root `docs/`). Nameservers for `agentfund.online` point at Vercel DNS (`ns1`/`ns2.vercel-dns.com`), which manages the apex, `www`, and `app.agentfund.online` (dashboard, project `agentfund-dashboard`) records. Verify with `vercel domains inspect agentfund.online` or `dig agentfund.online +noall +answer`.
 
 3. **Republish `@agentfund/mcp` to npm as 0.1.1** (unblocks the MCP Registry submission — flagged `partial` by the mcpRegistry agent). Files are already prepared at version 0.1.1 with the `mcpName` ownership marker (`mcp/package.json`, `mcp/server.json`, `mcp/README.md`).
    - Create a new granular npm access token scoped to `@agentfund/mcp` (Read+Write) at https://www.npmjs.com/settings/<org-or-user>/tokens/. Do **not** paste it into any file.
@@ -100,4 +87,4 @@ Draft files live in `E:\AIfundraising\launch-drafts\`. None of these have been s
 - Devnet programs: agent_registry `2TqDeKaadPUeBcgaXXqYAqddfZngUfbq4m8iDSyePSBA`, escrow `HiuwNu1K927uTd8xvVCXUHvJW7BcBCgrNBAMC3qUN1Sz`, reputation `7DVKSmmhKVWW5JpwWCS89Fi6uwj3RaPADEBbVqyH8Zo7`
 - Demo project PDA `9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H`, escrow PDA `AsfYmmyw6uMhshEJtAXPRT3G5qgFCfB3c54n42ErZcCy`
 - Development donation address: `DE6LQa1RRKHjwH8QvJ2SoACWejK36Yx6tronj7yD9dcE`
-- Domain: agentfund.online (landing page ready at `docs/index.html`, GitHub Pages source `/docs`)
+- Domain: agentfund.online (landing page at `docs/index.html`, deployed via Vercel project `agentfund-site`)

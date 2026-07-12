@@ -43,8 +43,8 @@ RPC key, JWT secret, DB password, and the platform wallet keypair.
 | REST + WebSocket API   | https://api.agentfund.online        | `/ws` for WebSocket, `/openapi.json`     |
 | MCP (StreamableHTTP)   | https://mcp.agentfund.online        | `POST /mcp`, `GET /healthz`              |
 | ACP                    | https://acp.agentfund.online        | `GET /agents`, `GET /health`, `POST /runs` |
-| Dashboard (Next.js)    | https://app.agentfund.online        | Deployed on Vercel                       |
-| Landing page           | https://agentfund.online            | GitHub Pages (`main:/docs`)              |
+| Dashboard (Next.js)    | https://app.agentfund.online        | Vercel project `agentfund-dashboard` (root `web/`) |
+| Landing page           | https://agentfund.online            | Vercel project `agentfund-site` (root `docs/`) |
 
 `mcp` and `acp` run as additional services in `docker-compose.prod.yml`,
 built from `deploy/mcp.Dockerfile` / `deploy/acp.Dockerfile` (same

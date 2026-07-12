@@ -253,23 +253,27 @@ Set every env var `deploy/.env.example` lists (repo-root `.env.example` and each
 
 To deploy an update, `git pull` on the host and re-run the `up -d --build` command (see [`deploy/README.md`](deploy/README.md) → "Update to latest main").
 
-### 4.2 Vercel — `web`
+### 4.2 Vercel — `web` (dashboard) and `docs` (landing page)
 
-Import the repo into Vercel, set the **root directory** to `web/`. Vercel auto-detects Next.js 14. Set env vars: `NEXT_PUBLIC_API_URL=https://api.<domain>`, `NEXT_PUBLIC_WS_URL=wss://api.<domain>/ws`, plus anything else `web/` reads from `NEXT_PUBLIC_*`. Because `web/public/.well-known/*` and `web/public/llms.txt` are static files under `public/`, Vercel serves them as-is at `https://<domain>/.well-known/agent-fund.json` etc. with no extra config — just make sure the program-id placeholders were substituted with real values before this deploy (Step 2.2).
+Two separate Vercel projects, both under the same team:
+
+- **`agentfund-dashboard`** — root directory `web/`. Vercel auto-detects Next.js 14. Env vars: `NEXT_PUBLIC_API_URL=https://api.<domain>`, `NEXT_PUBLIC_WS_URL=wss://api.<domain>/ws`, plus anything else `web/` reads from `NEXT_PUBLIC_*`. Because `web/public/.well-known/*` and `web/public/llms.txt` are static files under `public/`, Vercel serves them as-is at `https://<domain>/.well-known/agent-fund.json` etc. with no extra config — just make sure the program-id placeholders were substituted with real values before this deploy (Step 2.2). Bound to `app.agentfund.online`.
+- **`agentfund-site`** — the static landing page under `docs/`, deployed as its own Vercel project. Bound to `agentfund.online` (apex) and `www.agentfund.online`.
 
 ### 4.3 DNS subdomain map
 
-Add these records at your DNS provider for `agentfund.online` (adjust if using a different domain):
+`agentfund.online`'s nameservers point at Vercel DNS (`ns1`/`ns2.vercel-dns.com`), which manages the apex, `www`, and `app` records for the two Vercel projects above. `api`, `mcp`, and `acp` are plain `A` records (also in the Vercel-managed zone) pointing at the EC2 host:
 
 | Record | Type | Target |
 |---|---|---|
-| `agentfund.online` | A / ALIAS | GitHub Pages (landing page, `main:/docs`) |
-| `app.agentfund.online` | CNAME | Vercel (dashboard) |
+| `agentfund.online` | Vercel-managed | `agentfund-site` project (landing page, `docs/`) |
+| `www.agentfund.online` | Vercel-managed | `agentfund-site` project |
+| `app.agentfund.online` | Vercel-managed | `agentfund-dashboard` project |
 | `api.agentfund.online` | A | The EC2 host's public IP (Caddy routes by hostname) |
 | `mcp.agentfund.online` | A | The EC2 host's public IP (same Caddy instance) |
 | `acp.agentfund.online` | A | The EC2 host's public IP (same Caddy instance) |
 
-`api`, `mcp`, and `acp` all resolve to the same box — Caddy (see `deploy/Caddyfile`) terminates TLS and routes each hostname to its own container. Caddy provisions Let's Encrypt certs automatically once DNS resolves to the host; Vercel does the same for `app.agentfund.online` — allow propagation time before the smoke test.
+`api`, `mcp`, and `acp` all resolve to the same box — Caddy (see `deploy/Caddyfile`) terminates TLS and routes each hostname to its own container. Caddy provisions Let's Encrypt certs automatically once DNS resolves to the host; Vercel does the same for the domains it manages — allow propagation time before the smoke test.
 
 ---
 
