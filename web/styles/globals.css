@@ -41,6 +41,9 @@
   --af-max-width: 1180px;
   --af-nav-height: 64px;
   --af-stats-height: 40px;
+  /* Set to 40px by Banner.tsx once mounted (and not dismissed) — starts at
+     0 so nothing reserves space for it before JS confirms it should show. */
+  --af-banner-height: 0px;
 
   /* Fonts (populated by next/font variables in layout.tsx) */
   --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -139,7 +142,7 @@ ol {
 .af-main {
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - var(--af-nav-height) - var(--af-stats-height));
+  min-height: calc(100vh - var(--af-nav-height) - var(--af-stats-height) - var(--af-banner-height));
   padding-bottom: 80px;
 }
 
@@ -388,9 +391,82 @@ ol {
    Nav + stats ticker
    ─────────────────────────────────────────────────────────── */
 
-.af-statsbar {
+.af-banner {
   position: sticky;
   top: 0;
+  z-index: 31;
+  height: var(--af-banner-height);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.18);
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.22), rgba(6, 182, 212, 0.16));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 12.5px;
+  transition: height 0.2s var(--af-ease);
+}
+
+.af-banner__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--af-banner-height);
+}
+
+.af-banner__track {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: af-banner-fade-in 0.35s var(--af-ease);
+}
+
+.af-banner__icon {
+  flex: none;
+}
+
+.af-banner__text {
+  color: var(--af-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.af-banner__dismiss {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--af-text-dim);
+  font-size: 11px;
+  transition: color 0.2s var(--af-ease), background 0.2s var(--af-ease);
+}
+
+.af-banner__dismiss:hover {
+  color: var(--af-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes af-banner-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.af-statsbar {
+  position: sticky;
+  top: var(--af-banner-height);
   z-index: 30;
   height: var(--af-stats-height);
   display: flex;
@@ -445,7 +521,7 @@ ol {
 
 .af-navbar {
   position: sticky;
-  top: var(--af-stats-height);
+  top: calc(var(--af-banner-height) + var(--af-stats-height));
   z-index: 29;
   height: var(--af-nav-height);
   display: flex;

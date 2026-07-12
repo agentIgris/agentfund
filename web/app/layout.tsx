@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "../styles/globals.css";
 import { Starfield } from "../components/Starfield";
+import { Banner } from "../components/Banner";
 import { StatsBar } from "../components/StatsBar";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body>
         <Starfield />
+        <Banner />
         <StatsBar />
         <Navbar />
         <main>{children}</main>
