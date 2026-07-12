@@ -9,6 +9,13 @@ export const listProjectsQuerySchema = paginationQuerySchema.extend({
   minGoal: z.coerce.number().int().nonnegative().optional(),
   category: z.string().optional(),
   sort: z.enum(["newest", "oldest", "goal", "raised", "deadline"]).optional().default("newest"),
+  /**
+   * By default, projects whose metadata never resolved to a real title
+   * (title === "" — see indexer.ts's ProjectCreated handler) are excluded
+   * from every public response. Pass `includeHidden=true` to see them
+   * anyway — useful for debugging/ops, never used by the web dashboard.
+   */
+  includeHidden: z.coerce.boolean().optional().default(false),
 });
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 

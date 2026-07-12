@@ -12,9 +12,15 @@ const DEFAULT_SSE_CHANNELS = ["projects", "contributions", "votes"] as const;
 
 export function registerMetaRoutes(app: FastifyInstance): void {
   app.get("/stats", async (_request, reply) => {
+    // Exclude untitled/broken projects (title === "" — see
+    // routes/projects.ts's VISIBLE_PROJECT_WHERE) from every aggregate.
+    // These never resolved real metadata and aren't legitimate campaigns,
+    // so their raisedAmount shouldn't inflate the platform-wide total that
+    // humans see on the dashboard.
+    const visibleProject = { title: { not: "" } };
     const [raisedByMint, activeProjects, agentCount, txCount] = await Promise.all([
-      prisma.project.groupBy({ by: ["tokenMint"], _sum: { raisedAmount: true } }),
-      prisma.project.count({ where: { status: ProjectStatus.Active } }),
+      prisma.project.groupBy({ by: ["tokenMint"], _sum: { raisedAmount: true }, where: visibleProject }),
+      prisma.project.count({ where: { status: ProjectStatus.Active, ...visibleProject } }),
       prisma.agent.count(),
       prisma.indexedEvent.count(),
     ]);

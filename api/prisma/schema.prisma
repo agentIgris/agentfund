@@ -157,6 +157,26 @@ model WebhookRegistration {
   @@index([agentWallet])
 }
 
+/// Self-hosted, content-addressed project/agent metadata blob. Used as the
+/// fallback pinning target when PINATA_JWT isn't configured (see
+/// services/ipfs.ts's pinJson) — same devnet content-addressing scheme as
+/// the git-committed metadata/*.json files served at GET /metadata/:file,
+/// generalized to dynamic (agent-submitted) content: `hash` is the sha256
+/// of the canonical JSON `content`, and GET /metadata/blob/:hash serves it
+/// back verbatim so `services/ipfs.ts`'s `resolveMetadataJson` can verify
+/// the on-chain `#sha256=` fragment against it, exactly as it already does
+/// for genesis.json.
+model MetadataBlob {
+  /// sha256 hex digest of the exact bytes in `content`.
+  hash      String   @id
+  /// Raw JSON text, stored verbatim (not the `Json` column type) so
+  /// Postgres never re-normalizes key order/whitespace — the served bytes
+  /// must match `hash` exactly, byte-for-byte, or the sha256 integrity
+  /// check in `resolveMetadataJson` would fail.
+  content   String
+  createdAt DateTime @default(now())
+}
+
 /// Raw record of every parsed Helius webhook event, for audit/replay and
 /// idempotency (dedupe on signature + eventName before indexing).
 model IndexedEvent {

@@ -31,11 +31,22 @@ function tokenToMint(token: "SOL" | "USDC"): string {
   return token === "SOL" ? NATIVE_SOL_MINT : resolveUsdcMint();
 }
 
+/**
+ * A project with `title === ""` never got a real title resolved from its
+ * metadata reference (see indexer.ts's ProjectCreated/ProjectMetadataUpdated
+ * handlers) — it's not a legitimate campaign, just broken/incomplete
+ * on-chain state (a lagging metadata fetch, a test project created by
+ * bypassing the API, a bad on-chain `ipfs_hash`, etc). Every public-facing
+ * route excludes these by default so the dashboard (or any other consumer
+ * of this API) can never render an untitled/broken project card.
+ */
+const VISIBLE_PROJECT_WHERE = { title: { not: "" } };
+
 export function registerProjectRoutes(app: FastifyInstance): void {
   app.get("/projects", async (request, reply) => {
     const parsed = listProjectsQuerySchema.safeParse(request.query);
     if (!parsed.success) return reply.code(400).send({ error: "invalid_request", details: parsed.error.flatten() });
-    const { status, token, minGoal, category, sort, limit, offset } = parsed.data;
+    const { status, token, minGoal, category, sort, limit, offset, includeHidden } = parsed.data;
 
     const orderBy =
       sort === "oldest"
@@ -54,6 +65,7 @@ export function registerProjectRoutes(app: FastifyInstance): void {
         tokenMint: token ? tokenToMint(token) : undefined,
         goalAmount: minGoal ? { gte: BigInt(minGoal) } : undefined,
         category: category ?? undefined,
+        ...(includeHidden ? {} : VISIBLE_PROJECT_WHERE),
       },
       orderBy,
       take: limit,
@@ -111,7 +123,13 @@ export function registerProjectRoutes(app: FastifyInstance): void {
     const parsed = projectIdParamSchema.safeParse(request.params);
     if (!parsed.success) return reply.code(400).send({ error: "invalid_request" });
     const project = await prisma.project.findUnique({ where: { id: parsed.data.id } });
-    if (!project) return reply.code(404).send({ error: "not_found" });
+    // Same rule as the list route: a broken/untitled project (see
+    // VISIBLE_PROJECT_WHERE above) is treated as not found by every public
+    // route, including direct-by-id lookups — there is no legitimate way
+    // for a human-facing page to link to one in the first place, so a 404
+    // here just means "this isn't a real project" rather than hiding an
+    // error.
+    if (!project || project.title === "") return reply.code(404).send({ error: "not_found" });
     return reply.send({ project: serializeBigInts(project) });
   });
 

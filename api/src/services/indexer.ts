@@ -124,12 +124,23 @@ async function dispatch(event: RawProgramEvent): Promise<void> {
       timestamp: number;
     };
 
-    let meta: ProjectMetadata = { title: d.project, description: "" };
+    // Empty string, NOT the project's own pubkey — a non-empty placeholder
+    // like the pubkey reads as real content ("2EUXe...657" looks like a
+    // title, not a missing one) and would keep showing on the public
+    // dashboard looking broken. `title: ""` is falsy, matches what
+    // POST /projects' zod validation already rejects for a *new* project
+    // (title.min(1)), and — critically — routes/projects.ts filters
+    // `title: ""` out of every public listing/detail response by default,
+    // so an unresolvable-metadata project never renders publicly at all
+    // instead of rendering with a confusing "title". A future
+    // ProjectMetadataUpdated event (or re-index once metadata propagates)
+    // still backfills the real title normally.
+    let meta: ProjectMetadata = { title: "", description: "" };
     try {
       meta = await resolveMetadataJson<ProjectMetadata>(d.ipfsHash);
     } catch {
-      // Metadata unavailable yet (IPFS propagation lag) — fall back to a
-      // placeholder; a future re-index / manual refresh can backfill it.
+      // Metadata unavailable yet (IPFS propagation lag, or a non-resolvable
+      // reference) — fall back to the empty-title placeholder above.
     }
 
     await prisma.agent.upsert({

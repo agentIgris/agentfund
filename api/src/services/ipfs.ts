@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 
 import { config } from "../config.js";
+import { prisma } from "../lib/prisma.js";
 
 const PINATA_PIN_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
 const PINATA_GATEWAY_URL = "https://gateway.pinata.cloud/ipfs";
@@ -31,13 +32,41 @@ export interface AgentMetadata {
   avatar?: string;
 }
 
-/** Pins arbitrary JSON metadata to IPFS via Pinata, returning the CID (`ipfsHash`). */
+/**
+ * Self-hosted fallback for `pinJson` when PINATA_JWT isn't configured:
+ * stores the canonical JSON bytes in the `MetadataBlob` table (upsert —
+ * content-addressed by its own sha256, so re-pinning identical content is
+ * a no-op) and returns the same
+ * `https://<api>/metadata/blob/<hash>#sha256=<hash>` shape already used by
+ * the genesis campaign's git-committed metadata, so `resolveMetadataJson`
+ * needs no changes to consume either one. This is what keeps
+ * `POST /projects` (and agent registration) working in any environment
+ * that hasn't set up a paid Pinata account — devnet in particular.
+ */
+async function pinJsonSelfHosted(data: Record<string, unknown>): Promise<string> {
+  const canonical = JSON.stringify(data);
+  const hash = createHash("sha256").update(canonical).digest("hex");
+  await prisma.metadataBlob.upsert({
+    where: { hash },
+    create: { hash, content: canonical },
+    update: {},
+  });
+  const base = config.apiBaseUrl.replace(/\/+$/, "");
+  return `${base}/metadata/blob/${hash}#sha256=${hash}`;
+}
+
+/**
+ * Pins arbitrary JSON metadata, returning a reference resolvable by
+ * `resolveMetadataJson`. Uses Pinata (a real IPFS CID) when PINATA_JWT is
+ * configured; otherwise falls back to the self-hosted content-addressed
+ * store above rather than failing every project/agent creation outright.
+ */
 export async function pinJson(
   data: Record<string, unknown>,
   name?: string,
 ): Promise<string> {
   if (!config.pinata.jwt) {
-    throw new Error("PINATA_JWT is not configured — cannot pin metadata to IPFS");
+    return pinJsonSelfHosted(data);
   }
   const res = await fetch(PINATA_PIN_JSON_URL, {
     method: "POST",
