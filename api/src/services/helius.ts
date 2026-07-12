@@ -46,6 +46,13 @@ const REGISTRY_EVENT_DECODERS: Record<string, EventDecoder> = {
     changedBy: r.readPubkey(),
     timestamp: Number(r.readI64()),
   }),
+  ProjectMetadataUpdated: (r) => ({
+    project: r.readPubkey(),
+    oldIpfsHash: r.readString(),
+    newIpfsHash: r.readString(),
+    changedBy: r.readPubkey(),
+    timestamp: Number(r.readI64()),
+  }),
 };
 
 const ESCROW_EVENT_DECODERS: Record<string, EventDecoder> = {
