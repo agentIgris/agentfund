@@ -7,6 +7,9 @@
  *  - create_project rejecting a deadline that is not strictly in the future
  *  - update_project_status rejecting a signer who is neither the project's
  *    creator nor the platform authority stored in the Config PDA
+ *  - update_project_metadata: creator succeeds, platform authority
+ *    succeeds, outsider rejected (Unauthorized), over-length hash
+ *    rejected (IpfsHashTooLong)
  *
  * Run via `anchor test` (Anchor.toml wires this into
  * `ts-mocha -p ./tsconfig.json -t 1000000 tests/**\/*.ts`), against
@@ -224,6 +227,105 @@ describe("agent_registry", () => {
     } catch (err) {
       const anchorErr = err as AnchorError;
       expect(anchorErr.error?.errorCode?.code).to.equal("Unauthorized");
+    }
+  });
+
+  it("lets the creator update project metadata", async () => {
+    const [projectPda] = PublicKey.findProgramAddressSync(
+      [PROJECT_SEED, creator.publicKey.toBuffer(), u32LeBytes(0)],
+      program.programId,
+    );
+    const newHash = "sha256:1111111111111111111111111111111111111111111111111111111111111111";
+
+    await program.methods
+      .updateProjectMetadata(newHash)
+      .accounts({
+        authority: creator.publicKey,
+        project: projectPda,
+        config: configPda,
+      })
+      .signers([creator])
+      .rpc();
+
+    const projectAccount = await program.account.projectAccount.fetch(
+      projectPda,
+    );
+    expect(projectAccount.ipfsHash).to.equal(newHash);
+  });
+
+  it("lets the platform authority update project metadata", async () => {
+    await airdrop(connection, platformAuthority.publicKey, 1);
+
+    const [projectPda] = PublicKey.findProgramAddressSync(
+      [PROJECT_SEED, creator.publicKey.toBuffer(), u32LeBytes(0)],
+      program.programId,
+    );
+    const newHash = "sha256:2222222222222222222222222222222222222222222222222222222222222222";
+
+    await program.methods
+      .updateProjectMetadata(newHash)
+      .accounts({
+        authority: platformAuthority.publicKey,
+        project: projectPda,
+        config: configPda,
+      })
+      .signers([platformAuthority])
+      .rpc();
+
+    const projectAccount = await program.account.projectAccount.fetch(
+      projectPda,
+    );
+    expect(projectAccount.ipfsHash).to.equal(newHash);
+  });
+
+  it("rejects update_project_metadata from a signer who is neither the creator nor the platform authority", async () => {
+    const [projectPda] = PublicKey.findProgramAddressSync(
+      [PROJECT_SEED, creator.publicKey.toBuffer(), u32LeBytes(0)],
+      program.programId,
+    );
+
+    try {
+      await program.methods
+        .updateProjectMetadata("sha256:attacker-controlled-metadata")
+        .accounts({
+          authority: outsider.publicKey,
+          project: projectPda,
+          config: configPda,
+        })
+        .signers([outsider])
+        .rpc();
+      expect.fail(
+        "expected update_project_metadata to reject a non-creator, non-authority signer",
+      );
+    } catch (err) {
+      const anchorErr = err as AnchorError;
+      expect(anchorErr.error?.errorCode?.code).to.equal("Unauthorized");
+    }
+  });
+
+  it("rejects update_project_metadata when the new hash exceeds MAX_IPFS_HASH_LEN", async () => {
+    const [projectPda] = PublicKey.findProgramAddressSync(
+      [PROJECT_SEED, creator.publicKey.toBuffer(), u32LeBytes(0)],
+      program.programId,
+    );
+    const oversized = "x".repeat(129); // MAX_IPFS_HASH_LEN is 128
+
+    try {
+      await program.methods
+        .updateProjectMetadata(oversized)
+        .accounts({
+          authority: creator.publicKey,
+          project: projectPda,
+          config: configPda,
+        })
+        .signers([creator])
+        .rpc();
+      expect.fail(
+        "expected update_project_metadata to reject an over-length hash",
+      );
+    } catch (err) {
+      const anchorErr = err as AnchorError;
+      expect(anchorErr.error?.errorCode?.code).to.equal("IpfsHashTooLong");
     }
   });
 });

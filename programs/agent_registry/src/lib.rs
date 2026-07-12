@@ -152,6 +152,43 @@ pub mod agent_registry {
 
         Ok(())
     }
+
+    /// Replaces a project's metadata hash/URI. Restricted to the
+    /// project's own creator or the platform authority stored in the
+    /// Config PDA — the same authorization model as
+    /// `update_project_status`. The account's `ipfs_hash` field is
+    /// sized for `MAX_IPFS_HASH_LEN` at creation, so no realloc is
+    /// required.
+    pub fn update_project_metadata(
+        ctx: Context<UpdateProjectMetadata>,
+        new_ipfs_hash: String,
+    ) -> Result<()> {
+        require!(
+            new_ipfs_hash.len() <= MAX_IPFS_HASH_LEN,
+            RegistryError::IpfsHashTooLong
+        );
+
+        let signer = ctx.accounts.authority.key();
+        let is_creator = signer == ctx.accounts.project.creator;
+        let is_platform_authority = signer == ctx.accounts.config.authority;
+        require!(
+            is_creator || is_platform_authority,
+            RegistryError::Unauthorized
+        );
+
+        let project = &mut ctx.accounts.project;
+        let old_ipfs_hash = std::mem::replace(&mut project.ipfs_hash, new_ipfs_hash.clone());
+
+        emit!(ProjectMetadataUpdated {
+            project: project.key(),
+            old_ipfs_hash,
+            new_ipfs_hash,
+            changed_by: signer,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+
+        Ok(())
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -218,6 +255,24 @@ pub struct CreateProject<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateProjectStatus<'info> {
+    pub authority: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [PROJECT_SEED, project.creator.as_ref(), &project.project_index.to_le_bytes()],
+        bump = project.bump,
+    )]
+    pub project: Account<'info, ProjectAccount>,
+
+    #[account(
+        seeds = [CONFIG_SEED],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, Config>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateProjectMetadata<'info> {
     pub authority: Signer<'info>,
 
     #[account(
@@ -322,6 +377,15 @@ pub struct ProjectStatusChanged {
     pub project: Pubkey,
     pub old_status: ProjectStatus,
     pub new_status: ProjectStatus,
+    pub changed_by: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct ProjectMetadataUpdated {
+    pub project: Pubkey,
+    pub old_ipfs_hash: String,
+    pub new_ipfs_hash: String,
     pub changed_by: Pubkey,
     pub timestamp: i64,
 }
