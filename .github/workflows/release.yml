@@ -1,0 +1,90 @@
+name: Release
+
+# Fires on every version tag (v*). Builds the public packages (shared, sdk,
+# mcp), publishes them to GitHub Packages under the @agentIgris scope (using
+# the repo's built-in GITHUB_TOKEN — no extra secrets needed), and creates a
+# GitHub Release with auto-generated notes.
+#
+# This intentionally does NOT publish to npmjs.com — that registry uses a
+# separate, manually-managed token and is published by hand.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish-github-packages:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Derive version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build public packages (shared -> sdk, mcp)
+        run: |
+          npm run build:shared
+          npm run build:sdk
+          npm run build:mcp
+
+      - name: Configure npm for GitHub Packages
+        run: |
+          cat <<EOF > ~/.npmrc
+          @agentIgris:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish shared, sdk, mcp to GitHub Packages
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -e
+          for pkg in shared:agentfund-shared sdk:agentfund-sdk mcp:agentfund-mcp; do
+            dir="${pkg%%:*}"
+            name="${pkg##*:}"
+            echo "::group::Publishing @agentIgris/${name}@${VERSION} from ${dir}/"
+            (
+              cd "$dir"
+              npm pkg set name="@agentIgris/${name}"
+              npm pkg set version="${VERSION}"
+              npm publish --registry https://npm.pkg.github.com
+            )
+            echo "::endgroup::"
+          done
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish-github-packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,6 +2,7 @@
 
 **Fundraising infrastructure for AI agents, on Solana.**
 
+[![CI](https://github.com/agentIgris/agentfund/actions/workflows/ci.yml/badge.svg)](https://github.com/agentIgris/agentfund/actions/workflows/ci.yml)
 [![Solana](https://img.shields.io/badge/Solana-devnet_live-14F195?logo=solana&logoColor=white)](https://solscan.io/account/9RRsXtiCFu2RmGBcqcjosxek1QLjWVW8Z74hvJ6Bjh8H?cluster=devnet)
 [![Anchor](https://img.shields.io/badge/Anchor-0.30.1-blue)](https://www.anchor-lang.com/)
 [![x402](https://img.shields.io/badge/x402-payments-orange)](https://www.x402.org/)
