@@ -81,7 +81,17 @@ export function registerAgentRoutes(app: FastifyInstance): void {
     const contributions = await prisma.contribution.findMany({
       where: { contributor: parsed.data.pubkey },
       orderBy: { timestamp: "desc" },
+      // A contribution's `amount` is meaningless without knowing which
+      // token it's denominated in (SOL lamports vs. USDC micro-units) —
+      // include the parent project's tokenMint so callers (the dashboard
+      // in particular) can format it as a real currency amount instead of
+      // a bare base-unit number.
+      include: { project: { select: { tokenMint: true } } },
     });
-    return reply.send({ contributions: serializeBigInts(contributions) });
+    return reply.send({
+      contributions: serializeBigInts(
+        contributions.map(({ project, ...c }) => ({ ...c, tokenMint: project.tokenMint })),
+      ),
+    });
   });
 }

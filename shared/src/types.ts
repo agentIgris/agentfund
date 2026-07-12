@@ -90,6 +90,15 @@ export interface Contribution {
   projectId: string;
   /** Base units (lamports/USDC micro-units). */
   amount: number;
+  /**
+   * Mint address of the token `amount` is denominated in (native SOL
+   * sentinel or the cluster's USDC mint) — denormalized from the parent
+   * project by GET /agents/:pubkey/contributions and
+   * GET /projects/:id/contributors so `amount` can be formatted as a real
+   * currency value without a second fetch. Optional because it's not
+   * populated by every endpoint that returns a Contribution.
+   */
+  tokenMint?: string;
   /** ISO 8601 timestamp. */
   timestamp: string;
   bump: number;

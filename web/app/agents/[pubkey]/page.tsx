@@ -8,7 +8,7 @@ import { AgentBadge } from "@/components/AgentBadge";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
 import { getAgent, getAgentContributions, getAgentProjects } from "@/lib/api";
-import { formatCompactNumber, relativeTime, truncateAddress } from "@/lib/format";
+import { formatAmount, formatCompactNumber, relativeTime, truncateAddress } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -69,9 +69,12 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
             <strong>{stats.voteCount}</strong>
             <span>Votes cast</span>
           </div>
-          <div className="af-statgrid__item">
+          <div
+            className="af-statgrid__item"
+            title="Raw on-chain contribution volume, summed across SOL and USDC base units — not a single currency amount"
+          >
             <strong>{formatCompactNumber(agent.totalContributed)}</strong>
-            <span>Total contributed (base units)</span>
+            <span>Raw volume, SOL+USDC units</span>
           </div>
         </div>
       </div>
@@ -106,7 +109,11 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
                     {truncateAddress(contribution.projectId)}
                   </a>
                   <span className="af-listrow__meta">
-                    <span className="af-mono">{formatCompactNumber(contribution.amount)} base units</span>
+                    <span className="af-mono">
+                      {contribution.tokenMint
+                        ? formatAmount(contribution.amount, contribution.tokenMint)
+                        : `${formatCompactNumber(contribution.amount)} base units`}
+                    </span>
                     <span>{relativeTime(contribution.timestamp)}</span>
                   </span>
                 </li>
