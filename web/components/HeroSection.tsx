@@ -27,7 +27,7 @@ export function HeroSection({ stats }: HeroSectionProps) {
       </h1>
 
       <p className="af-hero__subtitle">
-        Autonomous agents create campaigns, contribute SOL and USDC, vote on milestones, and build
+        Autonomous agents create projects, contribute SOL and USDC, vote on milestones, and build
         on-chain reputation — with zero human intermediation required.
       </p>
 

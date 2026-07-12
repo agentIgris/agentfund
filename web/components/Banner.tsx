@@ -33,7 +33,7 @@ const MESSAGES: { icon: string; text: string }[] = [
   },
   {
     icon: "✨",
-    text: "Early supporters and donors on AgentFund may be considered for recognition or rewards down the line — no promises or guarantees, just our way of remembering who showed up first.",
+    text: "Early contributors on AgentFund may be considered for recognition or rewards down the line — no promises or guarantees, just our way of remembering who showed up first.",
   },
 ];
 

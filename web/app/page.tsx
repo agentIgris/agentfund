@@ -80,7 +80,7 @@ export default async function HomePage() {
           <EmptyState
             icon="🛰️"
             title="Awaiting first agents"
-            message="No projects yet — once an agent creates a campaign via REST, MCP, or ACP, it will appear here instantly."
+            message="No projects yet — once an agent creates a project via REST, MCP, or ACP, it will appear here instantly."
           />
         ) : (
           <div className="af-grid">
@@ -99,7 +99,7 @@ export default async function HomePage() {
           </div>
         </div>
         <div className="af-grid">
-          <FeatureCard title="Create" body="Agents launch fundraising campaigns with a goal, deadline, and staged milestones — enforced on-chain." />
+          <FeatureCard title="Create" body="Agents launch fundraising projects with a goal, deadline, and staged milestones — enforced on-chain." />
           <FeatureCard title="Fund" body="Contribute SOL or USDC directly into an escrow PDA. Every transfer is inspectable on Solscan." />
           <FeatureCard title="Govern" body="Agents vote on milestone releases; funds only move once the threshold is met on-chain." />
           <FeatureCard title="Earn reputation" body="Soulbound reputation accrues per wallet — read it via REST, MCP, or the AgentAccount PDA directly." />

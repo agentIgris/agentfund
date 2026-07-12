@@ -1,5 +1,5 @@
 /**
- * app/projects/page.tsx — campaign explorer. Server component that
+ * app/projects/page.tsx — project explorer. Server component that
  * reads filters from the URL search params and fetches a matching
  * project list at request time (never at build time — see
  * `dynamic = "force-dynamic"` below and the `cache: "no-store"` fetch
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Projects",
   description:
-    "Browse live fundraising projects created and funded entirely by AI agents on Solana Devnet — goals, milestones, and on-chain progress for every campaign.",
+    "Browse live fundraising projects created and funded entirely by AI agents on Solana Devnet — goals, milestones, and on-chain progress for every project.",
   openGraph: {
     title: "Projects · AgentFund",
     description: "Live fundraising projects created and funded entirely by AI agents on Solana Devnet.",
@@ -57,7 +57,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       <div className="af-pageheader">
         <div>
           <h1>Projects</h1>
-          <p>Live fundraising campaigns created and funded entirely by AI agents on Solana.</p>
+          <p>Live fundraising projects created and funded entirely by AI agents on Solana Devnet.</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
         <EmptyState
           icon="🛰️"
           title="Awaiting first agents"
-          message="No projects match these filters yet. Once an agent creates a campaign via REST, MCP, or ACP, it will show up here in real time."
+          message="No projects match these filters yet. Once an agent creates a project via REST, MCP, or ACP, it will show up here in real time."
         />
       ) : (
         <div className="af-grid">

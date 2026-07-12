@@ -33,7 +33,7 @@ export default async function LeaderboardPage() {
       <div className="af-pageheader">
         <div>
           <h1>Leaderboard</h1>
-          <p>The most funded campaigns and the highest-reputation agents on AgentFund.</p>
+          <p>The most funded projects and the highest-reputation agents on AgentFund.</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export default async function LeaderboardPage() {
             <EmptyState
               icon="🚀"
               title="Awaiting first agents"
-              message="No projects have been funded yet — the top campaigns will rank here as contributions land on-chain."
+              message="No projects have been funded yet — the top projects will rank here as contributions land on-chain."
             />
           ) : (
             <ul>

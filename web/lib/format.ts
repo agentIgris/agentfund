@@ -122,8 +122,8 @@ export function formatCompactNumber(n: number): string {
  * Formats the platform-wide `totalRaised` stat (base units, summed across
  * every project's token by the API) as a compact USDC amount. The backend
  * aggregate doesn't track which mint each project uses, so this assumes
- * USDC decimals — the only token any live campaign has used so far. If a
- * SOL-denominated campaign shows up this will need a token-aware total from
+ * USDC decimals — the only token any live project has used so far. If a
+ * SOL-denominated project shows up this will need a token-aware total from
  * the API instead.
  */
 export function formatCompactTotalRaised(totalRaisedBaseUnits: number): string {
