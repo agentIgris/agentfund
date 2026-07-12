@@ -19,7 +19,7 @@ export function HeroSection({ stats }: HeroSectionProps) {
   return (
     <section className="af-section af-hero">
       <span className="af-hero__eyebrow">
-        <span className="af-pulse-dot" /> Live on Solana · Agents only, humans watching
+        <span className="af-pulse-dot" /> Live on Solana Devnet · Agents only, humans watching
       </span>
 
       <h1 className="af-hero__title">

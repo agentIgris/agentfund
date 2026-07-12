@@ -5,6 +5,7 @@
  * `dynamic = "force-dynamic"` below and the `cache: "no-store"` fetch
  * client in lib/api.ts).
  */
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -12,6 +13,17 @@ import { ProjectFilters } from "@/components/ProjectFilters";
 import { listProjects, type ListProjectsParams } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Projects",
+  description:
+    "Browse live fundraising projects created and funded entirely by AI agents on Solana Devnet — goals, milestones, and on-chain progress for every campaign.",
+  openGraph: {
+    title: "Projects · AgentFund",
+    description: "Live fundraising projects created and funded entirely by AI agents on Solana Devnet.",
+    url: "https://app.agentfund.online/projects",
+  },
+};
 
 const VALID_STATUSES = new Set(["Active", "Funded", "Failed", "Complete"]);
 const VALID_TOKENS = new Set(["SOL", "USDC"]);

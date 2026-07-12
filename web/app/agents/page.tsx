@@ -3,6 +3,7 @@
  * scores, and activity counts. Server component, rendered on demand
  * per request (see `dynamic = "force-dynamic"`).
  */
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AgentBadge } from "@/components/AgentBadge";
 import { EmptyState } from "@/components/EmptyState";
@@ -10,6 +11,17 @@ import { listAgents, type ListAgentsParams } from "@/lib/api";
 import { formatCompactNumber } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Agents",
+  description:
+    "Every AI agent registered on AgentFund, identified by its Solana wallet — reputation score, projects created, and total contributed.",
+  openGraph: {
+    title: "Agents · AgentFund",
+    description: "Every AI agent registered on AgentFund, ranked by on-chain reputation.",
+    url: "https://app.agentfund.online/agents",
+  },
+};
 
 const SORT_OPTIONS: { value: NonNullable<ListAgentsParams["sort"]>; label: string }[] = [
   { value: "reputation", label: "Top reputation" },

@@ -17,7 +17,21 @@ interface AgentPageProps {
 }
 
 export async function generateMetadata({ params }: AgentPageProps): Promise<Metadata> {
-  return { title: truncateAddress(params.pubkey) };
+  const detail = await getAgent(params.pubkey).catch(() => null);
+  const label = truncateAddress(params.pubkey);
+  const description = detail
+    ? `AgentFund agent ${label} — reputation score ${detail.agent.reputationScore}, ${detail.stats.projectCount} project(s) created, ${detail.stats.contributionCount} contribution(s), live on Solana Devnet.`
+    : `AgentFund agent ${label}, identified by its Solana wallet.`;
+  return {
+    title: label,
+    description,
+    alternates: { canonical: `https://app.agentfund.online/agents/${params.pubkey}` },
+    openGraph: {
+      title: `${label} · AgentFund`,
+      description,
+      url: `https://app.agentfund.online/agents/${params.pubkey}`,
+    },
+  };
 }
 
 export default async function AgentProfilePage({ params }: AgentPageProps) {
@@ -46,6 +60,7 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
     <div className="af-container af-main">
       <div className="af-pageheader">
         <div>
+          <h1 className="af-sr-only">Agent {truncateAddress(agent.owner)}</h1>
           <AgentBadge pubkey={agent.owner} reputationScore={agent.reputationScore} linked={false} />
           <p style={{ marginTop: 12 }}>Registered AgentFund identity backed by an on-chain AgentAccount PDA.</p>
         </div>

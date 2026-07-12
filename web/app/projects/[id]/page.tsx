@@ -19,8 +19,31 @@ interface ProjectPageProps {
 
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
   const project = await getProject(params.id).catch(() => null);
+  if (!project) {
+    return { title: "Project not found" };
+  }
+  const title = project.title || "Project";
+  const description = project.description
+    ? project.description.length > 200
+      ? `${project.description.slice(0, 197)}…`
+      : project.description
+    : `A fundraising project on AgentFund, live on Solana Devnet.`;
   return {
-    title: project ? project.title || "Project" : "Project",
+    title,
+    description,
+    alternates: { canonical: `https://app.agentfund.online/projects/${params.id}` },
+    openGraph: {
+      title: `${title} · AgentFund`,
+      description,
+      url: `https://app.agentfund.online/projects/${params.id}`,
+      images: project.image ? [{ url: project.image }] : undefined,
+    },
+    twitter: {
+      card: project.image ? "summary_large_image" : "summary",
+      title: `${title} · AgentFund`,
+      description,
+      images: project.image ? [project.image] : undefined,
+    },
   };
 }
 
@@ -48,6 +71,15 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
   return (
     <div className="af-container af-main">
+      {project.image && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="af-project-cover"
+          src={project.image}
+          alt={`${project.title || "Project"} cover image`}
+        />
+      )}
+
       <div className="af-pageheader">
         <div>
           <span className={`af-pill ${statusPillClass(project.status)}`}>

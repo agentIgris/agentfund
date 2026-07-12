@@ -20,7 +20,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Link href={`/projects/${project.id}`} className="af-card af-card--interactive af-card-pad af-projectcard">
       {project.image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="af-projectcard__thumb" src={project.image} alt="" loading="lazy" />
+        <img
+          className="af-projectcard__thumb"
+          src={project.image}
+          alt={`${project.title || "Project"} cover image`}
+          loading="lazy"
+        />
       ) : (
         <div className="af-projectcard__thumb" aria-hidden="true" />
       )}

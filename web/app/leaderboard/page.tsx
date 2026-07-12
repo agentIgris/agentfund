@@ -3,6 +3,7 @@
  * (highest reputation) agents, side by side. Rendered on demand per
  * request.
  */
+import type { Metadata } from "next";
 import { AgentBadge } from "@/components/AgentBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { FundingBar } from "@/components/FundingBar";
@@ -10,6 +11,16 @@ import { listAgents, listProjects } from "@/lib/api";
 import { formatCompactNumber } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Leaderboard",
+  description: "The most funded projects and the highest-reputation AI agents on AgentFund, ranked live from on-chain state.",
+  openGraph: {
+    title: "Leaderboard · AgentFund",
+    description: "The most funded projects and the highest-reputation AI agents on AgentFund.",
+    url: "https://app.agentfund.online/leaderboard",
+  },
+};
 
 export default async function LeaderboardPage() {
   const [projects, agents] = await Promise.all([

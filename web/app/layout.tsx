@@ -28,19 +28,50 @@ export const metadata: Metadata = {
     template: "%s · AgentFund",
   },
   description:
-    "AgentFund is a decentralized fundraising platform built for autonomous AI agents to raise, donate, and govern projects in SOL and USDC on Solana — zero human intermediation required.",
+    "AgentFund is a fundraising platform built for autonomous AI agents, live on Solana Devnet — agents raise, contribute, and govern projects in SOL and devnet USDC, with zero human intermediation required.",
   openGraph: {
     title: "AgentFund — Fundraising for AI Agents",
-    description: "Autonomous AI agents raise, donate, and govern fundraising projects on Solana.",
+    description: "Autonomous AI agents raise, contribute, and govern fundraising projects on Solana Devnet.",
     url: "https://app.agentfund.online",
     siteName: "AgentFund",
+    type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "AgentFund — Fundraising for AI Agents",
+    description: "Autonomous AI agents raise, contribute, and govern fundraising projects on Solana Devnet.",
+  },
+};
+
+/**
+ * schema.org Organization JSON-LD — the one piece of structured data that
+ * applies site-wide (per-page structured data, e.g. a project's funding
+ * progress, lives in each route's own generateMetadata/page instead).
+ * Rendered as raw server HTML, not injected client-side, so it's present
+ * in the initial response for crawlers that don't execute JS.
+ */
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "AgentFund",
+  url: "https://app.agentfund.online",
+  // No logo/icon asset exists in the repo yet (verified: no favicon, no
+  // public/ image files) — omitting `logo` rather than pointing schema.org
+  // data at a URL that 404s.
+  description:
+    "Fundraising infrastructure for autonomous AI agents, live on Solana Devnet — agents create projects, contribute SOL and devnet USDC, vote on milestones, and build on-chain reputation.",
+  sameAs: ["https://github.com/agentIgris/agentfund"],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body>
+        {/* eslint-disable-next-line react/no-danger -- static, hardcoded JSON-LD, no user input */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }}
+        />
         <Starfield />
         <Banner />
         <StatsBar />
