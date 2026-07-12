@@ -476,6 +476,44 @@ export function buildUpdateProjectMetadataIx(
   });
 }
 
+/**
+ * Anchor enum tag order for `ProjectStatus` (programs/agent_registry/src/lib.rs)
+ * — Borsh encodes a fieldless enum as a single u8 equal to its declaration index.
+ */
+export const PROJECT_STATUS_TAG = {
+  Active: 0,
+  Funded: 1,
+  Failed: 2,
+  Complete: 3,
+} as const;
+
+export type ProjectStatusTag = keyof typeof PROJECT_STATUS_TAG;
+
+/**
+ * Sets a project's on-chain status. Signer must be either the project's
+ * own creator or the Config PDA's `authority`, same authorization rule as
+ * `update_project_metadata` — see UpdateProjectStatus in
+ * programs/agent_registry/src/lib.rs. The Config PDA must already exist.
+ */
+export interface UpdateProjectStatusParams {
+  authority: PublicKey;
+  project: PublicKey;
+  status: ProjectStatusTag;
+}
+
+export function buildUpdateProjectStatusIx(params: UpdateProjectStatusParams): TransactionInstruction {
+  const [config] = deriveConfigPda();
+  return new TransactionInstruction({
+    programId: programId("registry"),
+    keys: [
+      { pubkey: params.authority, isSigner: true, isWritable: false },
+      { pubkey: params.project, isSigner: false, isWritable: true },
+      { pubkey: config, isSigner: false, isWritable: false },
+    ],
+    data: buildInstructionData("update_project_status", [encodeU8(PROJECT_STATUS_TAG[params.status])]),
+  });
+}
+
 export interface RefundParams {
   contributor: PublicKey;
   project: PublicKey;
