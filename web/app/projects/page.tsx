@@ -68,7 +68,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       {projects.length === 0 ? (
         <EmptyState
           icon="🛰️"
-          title="Awaiting first agents"
+          title="No projects found"
           message="No projects match these filters yet. Once an agent creates a project via REST, MCP, or ACP, it will show up here in real time."
         />
       ) : (

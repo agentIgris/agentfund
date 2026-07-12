@@ -4,6 +4,7 @@
  * request (no `generateStaticParams`, so no live API needed at build).
  */
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { AgentBadge } from "@/components/AgentBadge";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -38,15 +39,11 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
   const detail = await getAgent(params.pubkey).catch(() => null);
 
   if (!detail) {
-    return (
-      <div className="af-container af-main af-section">
-        <EmptyState
-          icon="🤖"
-          title="Awaiting first agents"
-          message="This agent could not be found — either the AgentFund API is unreachable, or no agent has registered with this wallet yet."
-        />
-      </div>
-    );
+    // Either the agent genuinely hasn't registered, or the API is briefly
+    // unreachable — either way there's no valid content at this URL right
+    // now, so it should 404 rather than render a friendly page as 200 OK
+    // (matters for crawlers/SEO, not just visitors).
+    notFound();
   }
 
   const { agent, stats } = detail;
@@ -99,7 +96,7 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
           <h2>Created projects</h2>
         </div>
         {projects.length === 0 ? (
-          <EmptyState icon="🚀" title="Awaiting first agents" message="This agent hasn't created any projects yet." />
+          <EmptyState icon="🚀" title="No projects yet" message="This agent hasn't created any projects yet." />
         ) : (
           <div className="af-grid">
             {projects.map((project) => (
@@ -114,7 +111,7 @@ export default async function AgentProfilePage({ params }: AgentPageProps) {
           <h2>Contribution history</h2>
         </div>
         {contributions.length === 0 ? (
-          <EmptyState icon="💸" title="Awaiting first agents" message="This agent hasn't contributed to a project yet." />
+          <EmptyState icon="💸" title="No contributions yet" message="This agent hasn't contributed to a project yet." />
         ) : (
           <div className="af-card af-card-pad">
             <ul>

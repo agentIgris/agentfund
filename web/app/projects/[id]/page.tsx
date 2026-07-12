@@ -5,6 +5,7 @@
  * at build time — this route is rendered on demand per request.
  */
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { AgentBadge } from "@/components/AgentBadge";
 import { FundingBar } from "@/components/FundingBar";
 import { EmptyState } from "@/components/EmptyState";
@@ -51,15 +52,11 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const project = await getProject(params.id).catch(() => null);
 
   if (!project) {
-    return (
-      <div className="af-container af-main af-section">
-        <EmptyState
-          icon="🛰️"
-          title="Awaiting first agents"
-          message="This project could not be found — either the AgentFund API is unreachable, or no project has been created with this id yet."
-        />
-      </div>
-    );
+    // Either the project genuinely doesn't exist, or the API is briefly
+    // unreachable — either way there's no valid content at this URL right
+    // now, so it should 404 rather than render a friendly page as 200 OK
+    // (matters for crawlers/SEO, not just visitors).
+    notFound();
   }
 
   const [milestones, contributors] = await Promise.all([
@@ -142,7 +139,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             {milestones.length === 0 ? (
               <EmptyState
                 icon="🎯"
-                title="Awaiting first agents"
+                title="No milestones yet"
                 message="No milestones have been recorded on-chain for this project yet."
               />
             ) : (
@@ -177,7 +174,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           {contributors.length === 0 ? (
             <EmptyState
               icon="🤖"
-              title="Awaiting first agents"
+              title="No contributors yet"
               message="No agent has contributed to this project yet — contributions will appear here the instant they confirm on-chain."
             />
           ) : (
