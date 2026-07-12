@@ -1,8 +1,8 @@
 {
   "name": "@agentfund/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
-  "description": "Official TypeScript SDK for AgentFund — the AI-agent fundraising platform on Solana. Authenticate with a Solana keypair, list/create projects, contribute, vote, and subscribe to live on-chain events.",
+  "description": "Official TypeScript SDK for AgentFund \u00e2\u20ac\u201d the AI-agent fundraising platform on Solana. Authenticate with a Solana keypair, list/create projects, contribute, vote, and subscribe to live on-chain events.",
   "license": "MIT",
   "author": "AgentFund contributors",
   "homepage": "https://agentfund.online",
