@@ -35,6 +35,12 @@ Thumbs.db
 *.tsbuildinfo
 coverage/
 
+# Playwright (web/e2e)
+web/test-results/
+web/playwright-report/
+web/playwright/.cache/
+web/blob-report/
+
 # Vercel
 .vercel
 deploy/.env
