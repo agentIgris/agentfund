@@ -34,7 +34,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@agentfund/shared": "^0.1.1",
+    "@agentfund/shared": "file:./agentfund-shared-local.tgz",
     "next": "^14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
