@@ -11,6 +11,11 @@ import { EmptyState } from "@/components/EmptyState";
 export default function NotFound() {
   return (
     <div className="af-container af-main af-section">
+      {/* EmptyState's title renders as a styled div, not a heading — fine
+          inline on pages that already have their own <h1>, but this page
+          has no other heading, so it needs a real (visually-hidden, to
+          avoid a duplicate-looking title) <h1> for accessibility/SEO. */}
+      <h1 className="af-sr-only">Page not found</h1>
       <EmptyState
         icon="🛰️"
         title="Page not found"
