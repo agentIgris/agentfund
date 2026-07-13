@@ -53,6 +53,22 @@ Prisma) and reverse-proxied by Caddy at `mcp.agentfund.online` /
 `acp.agentfund.online`. Both talk to the API over the compose-internal
 network at `http://api:4000` rather than the public hostname.
 
+## deploy/mcp-glama.Dockerfile (third-party MCP hosting)
+
+Separate from `deploy/mcp.Dockerfile` above. Glama.ai's server-hosting flow
+(claim → configure Dockerfile → Deploy → Make Release, see
+[glama.json](../glama.json)) only supports **stdio** transport and drives
+the container itself — no HTTP server mode. `deploy/mcp-glama.Dockerfile`
+builds the same `shared` + `mcp` workspaces but runs `dist/stdio.js`
+instead of `dist/http.js`, defaults `API_BASE_URL` to the live
+`https://api.agentfund.online`, and runs as a non-root user (Glama's
+documented container convention). Build/run locally with:
+
+```bash
+docker build -f deploy/mcp-glama.Dockerfile -t agentfund-mcp-stdio .
+docker run --rm -i agentfund-mcp-stdio
+```
+
 ## outreach-agent (daily fundraiser, cron-driven)
 
 `outreach-agent` is a **profile-gated** service (`profiles: ["outreach"]`) —
