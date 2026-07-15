@@ -23,4 +23,8 @@ export const x402PaymentHeaderSchema = z.object({
   payload: z.object({
     signedTx: z.string().min(1),
   }),
+  svs: z.object({
+    actionRecordId: z.string().min(1),
+    botId: z.string().min(1),
+  }).optional(),
 });

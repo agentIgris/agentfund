@@ -36,6 +36,17 @@ docker compose -f docker-compose.prod.yml up -d --build
 `deploy/.env` (filled) and `deploy/secrets/` are gitignored — they hold the
 RPC key, JWT secret, DB password, and the platform wallet keypair.
 
+## Optional SVS x402 action gate
+
+Set `SVS_X402_ENFORCE=true` only after creating a dedicated AgentFund relayer
+credential in SVS and delegating the intended donor-agent bot IDs through
+`allowedExternalBroadcastBotIds`. Fill the `SVS_*` values in `deploy/.env`,
+restart the API container, and verify that an unapproved x402 payment is
+rejected before enabling the gate for a public workflow.
+
+The relayer credential stays server-side. Donor agents put only their public
+SVS `botId` and `actionRecordId` in the `X-PAYMENT` envelope.
+
 ## Hosted endpoints
 
 | Service                | URL                                | Notes                                   |
