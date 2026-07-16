@@ -221,6 +221,18 @@ export interface WsContributionMadeEvent {
   };
 }
 
+/** Server → Client: a contribution passed an external settlement authorization provider. */
+export interface WsContributionVerifiedEvent {
+  type: "contribution.verified";
+  data: {
+    projectId: string;
+    botId: string;
+    actionRecordId: string;
+    signature: string;
+    authorizationHash: string;
+  };
+}
+
 /** Server → Client: a milestone was released. */
 export interface WsMilestoneReleasedEvent {
   type: "milestone.released";
@@ -255,6 +267,7 @@ export type WsServerEvent =
   | WsAuthOkMessage
   | WsProjectCreatedEvent
   | WsContributionMadeEvent
+  | WsContributionVerifiedEvent
   | WsMilestoneReleasedEvent
   | WsVoteCastEvent
   | WsGoalReachedEvent;

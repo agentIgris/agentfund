@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { createSvsX402Gate, type SvsX402Settings } from "../src/services/svsX402.js";
+import { wsServerEventSchema } from "@agentfund/shared";
+import { emitContributionVerified } from "../src/services/contributionVerified.js";
+import type { SettlementAuthorizationProvider } from "../src/services/settlementAuthorization.js";
+import {
+  createSvsSettlementAuthorizationProvider,
+  type SvsX402Settings,
+} from "../src/services/svsX402.js";
 
 const settings: SvsX402Settings = {
   enforceX402: true,
@@ -23,7 +29,7 @@ const input = {
   serializedTransaction: "c2lnbmVkLXRyYW5zYWN0aW9u",
 };
 
-describe("createSvsX402Gate", () => {
+describe("createSvsSettlementAuthorizationProvider", () => {
   it("binds the exact AgentFund action and transaction before broadcast", async () => {
     const authorization = {
       ok: true,
@@ -48,9 +54,15 @@ describe("createSvsX402Gate", () => {
       },
     });
     const client = { request };
-    const gate = createSvsX402Gate({ settings, client, authorizeAction });
+    const gate: SettlementAuthorizationProvider =
+      createSvsSettlementAuthorizationProvider({ settings, client, authorizeAction });
 
-    await expect(gate.requireAuthorization(input)).resolves.toBe(authorization);
+    await expect(gate.requireAuthorization(input)).resolves.toEqual({
+      providerId: "svs",
+      actionRecordId: input.actionRecordId,
+      botId: input.botId,
+      authorizationHash: "a".repeat(64),
+    });
     expect(authorizeAction).toHaveBeenCalledWith(expect.objectContaining({
       client,
       botId: input.botId,
@@ -71,7 +83,10 @@ describe("createSvsX402Gate", () => {
       requireConfirmedFeePayment: true,
     }));
 
-    const evidence = await gate.reportBroadcast(input.actionRecordId, "confirmed-signature");
+    const evidence = await gate.reportBroadcast({
+      actionRecordId: input.actionRecordId,
+      signature: "confirmed-signature",
+    });
     expect(request).toHaveBeenCalledWith(`/api/actions/${input.actionRecordId}/external-broadcast`, {
       method: "POST",
       body: { signature: "confirmed-signature" },
@@ -80,6 +95,7 @@ describe("createSvsX402Gate", () => {
       retrySafe: true,
     });
     expect(evidence).toEqual({
+      providerId: "svs",
       version: "agentfund.svs-x402-broadcast-evidence.v1",
       status: "verified",
       actionRecordId: input.actionRecordId,
@@ -101,20 +117,23 @@ describe("createSvsX402Gate", () => {
   it("preserves the existing x402 flow when enforcement is disabled", async () => {
     const authorizeAction = vi.fn();
     const request = vi.fn();
-    const gate = createSvsX402Gate({
+    const gate = createSvsSettlementAuthorizationProvider({
       settings: { ...settings, enforceX402: false },
       client: { request },
       authorizeAction,
     });
 
     await expect(gate.requireAuthorization(input)).resolves.toBeNull();
-    await expect(gate.reportBroadcast(input.actionRecordId, "signature")).resolves.toBeNull();
+    await expect(gate.reportBroadcast({
+      actionRecordId: input.actionRecordId,
+      signature: "signature",
+    })).resolves.toBeNull();
     expect(authorizeAction).not.toHaveBeenCalled();
     expect(request).not.toHaveBeenCalled();
   });
 
   it("rejects a broadcast report that is not bound to the configured relayer", async () => {
-    const gate = createSvsX402Gate({
+    const gate = createSvsSettlementAuthorizationProvider({
       settings,
       client: {
         request: vi.fn().mockResolvedValue({
@@ -130,7 +149,36 @@ describe("createSvsX402Gate", () => {
       authorizeAction: vi.fn(),
     });
 
-    await expect(gate.reportBroadcast(input.actionRecordId, "signature"))
+    await expect(gate.reportBroadcast({
+      actionRecordId: input.actionRecordId,
+      signature: "signature",
+    }))
       .rejects.toThrow(/configured relayer/);
+  });
+});
+
+describe("contribution.verified event", () => {
+  it("publishes a typed internal event with the maintainer-requested fields", async () => {
+    const publish = vi.fn().mockResolvedValue(undefined);
+    const event = await emitContributionVerified({
+      projectId: "11111111111111111111111111111111",
+      botId: input.botId,
+      actionRecordId: input.actionRecordId,
+      signature: "confirmed-signature",
+      authorizationHash: "a".repeat(64),
+    }, publish);
+
+    expect(wsServerEventSchema.parse(event)).toEqual(event);
+    expect(publish).toHaveBeenCalledWith("contributions", event);
+    expect(event).toEqual({
+      type: "contribution.verified",
+      data: {
+        projectId: "11111111111111111111111111111111",
+        botId: input.botId,
+        actionRecordId: input.actionRecordId,
+        signature: "confirmed-signature",
+        authorizationHash: "a".repeat(64),
+      },
+    });
   });
 });

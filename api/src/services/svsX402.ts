@@ -4,6 +4,13 @@ import {
   type RequireAuthorizedActionOptions,
   type SvsAuthorizedActionRequirement,
 } from "@svsprotocol/solana/protocol";
+import type {
+  SettlementAuthorizationDecision,
+  SettlementAuthorizationInput,
+  SettlementAuthorizationProvider,
+  SettlementBroadcastEvidence,
+  SettlementBroadcastInput,
+} from "./settlementAuthorization.js";
 
 export interface SvsX402Settings {
   enforceX402: boolean;
@@ -14,17 +21,6 @@ export interface SvsX402Settings {
   policyId: string;
   approvalStaleAfterMs: number;
   certificationStaleAfterMs: number;
-}
-
-export interface SvsX402AuthorizationInput {
-  actionRecordId: string;
-  botId: string;
-  agentWallet: string;
-  action: "x402_contribute" | "x402_contribute_for";
-  projectId: string;
-  amountMicroUsdc: string;
-  escrowPda: string;
-  serializedTransaction: string;
 }
 
 export interface SvsX402BroadcastEvidence {
@@ -51,7 +47,7 @@ type AuthorizeAction = (
   options: RequireAuthorizedActionOptions,
 ) => Promise<SvsAuthorizedActionRequirement>;
 
-export function createSvsX402Gate({
+export function createSvsSettlementAuthorizationProvider({
   settings,
   client,
   authorizeAction = requireAuthorizedAction,
@@ -59,7 +55,7 @@ export function createSvsX402Gate({
   settings: SvsX402Settings;
   client?: SvsX402Client;
   authorizeAction?: AuthorizeAction;
-}) {
+}): SettlementAuthorizationProvider {
   const svsClient = client ?? (settings.enforceX402
     ? new SolanaVerificationClient({
         baseUrl: settings.serverUrl,
@@ -69,15 +65,16 @@ export function createSvsX402Gate({
     : null);
 
   return {
+    id: "svs",
     enabled: settings.enforceX402,
 
     async requireAuthorization(
-      input: SvsX402AuthorizationInput,
-    ): Promise<SvsAuthorizedActionRequirement | null> {
+      input: SettlementAuthorizationInput,
+    ): Promise<SettlementAuthorizationDecision | null> {
       if (!settings.enforceX402) return null;
       assertConfigured(settings);
 
-      return authorizeAction({
+      const authorization = await authorizeAction({
         client: svsClient,
         botId: input.botId,
         agentWallet: input.agentWallet,
@@ -98,14 +95,21 @@ export function createSvsX402Gate({
         requireSuccessfulSimulation: true,
         requireConfirmedFeePayment: true,
       });
+
+      return {
+        providerId: "svs",
+        actionRecordId: input.actionRecordId,
+        botId: input.botId,
+        authorizationHash: authorization.authorization.verificationHash,
+      };
     },
 
     async reportBroadcast(
-      actionRecordId: string,
-      signature: string,
-    ): Promise<SvsX402BroadcastEvidence | null> {
+      input: SettlementBroadcastInput,
+    ): Promise<(SvsX402BroadcastEvidence & SettlementBroadcastEvidence) | null> {
       if (!settings.enforceX402) return null;
       assertConfigured(settings);
+      const { actionRecordId, signature } = input;
       const result = await svsClient!.request(`/api/actions/${encodeURIComponent(actionRecordId)}/external-broadcast`, {
         method: "POST",
         body: { signature },
@@ -130,6 +134,7 @@ export function createSvsX402Gate({
       }
 
       return {
+        providerId: "svs",
         version: "agentfund.svs-x402-broadcast-evidence.v1",
         status: "verified",
         actionRecordId,

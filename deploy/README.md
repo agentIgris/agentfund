@@ -44,6 +44,11 @@ credential in SVS and delegating the intended donor-agent bot IDs through
 restart the API container, and verify that an unapproved x402 payment is
 rejected before enabling the gate for a public workflow.
 
+The API pins `@svsprotocol/solana` to exact version `0.5.0`. Any SDK upgrade
+must update that exact pin and receive a fresh review of package install hooks,
+runtime dependencies, exports, and configured network behavior before
+`SVS_X402_ENFORCE=true` is used in production.
+
 The relayer credential stays server-side. Donor agents put only their public
 SVS `botId` and `actionRecordId` in the `X-PAYMENT` envelope.
 
