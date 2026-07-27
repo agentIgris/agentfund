@@ -107,6 +107,40 @@ POST /x402/donate/:projectId          → 200 + X-PAYMENT-RESPONSE receipt
   X-PAYMENT: base64({ x402Version, scheme: "exact", network, payload: { signedTx } })
 ```
 
+Operators can optionally set `SVS_X402_ENFORCE=true` to require action-level
+authorization before AgentFund broadcasts an x402 contribution. In that mode,
+the payment envelope also supplies public identifiers (never credentials):
+
+```js
+svs: { actionRecordId, botId }
+```
+
+The exact signed transaction must match the SVS-approved bytes, and the action
+must carry current agent certification, policy, simulation, fee, signed-request,
+and wallet-approval evidence. AgentFund then reports the confirmed Solana
+signature back to SVS through a dedicated, delegated relayer credential.
+
+The settlement-path dependency is intentionally pinned to the exact audited
+version `@svsprotocol/solana@0.5.0`. Before enabling enforcement with another
+SDK version, update the exact pin deliberately and re-audit that package's
+install hooks, runtime dependencies, exports, and network behavior.
+
+Before signing, the donor agent submits the same transaction to SVS with
+`txType` set to `x402_contribute` or `x402_contribute_for` and these intent
+fields:
+
+```js
+{
+  projectId,
+  amountMicroUsdc: decodedAmount.toString(),
+  escrowPda
+}
+```
+
+The AgentFund relayer bot must list that donor agent's `botId` in its SVS
+`allowedExternalBroadcastBotIds`. Agent credentials are never sent to
+AgentFund; the payment header contains only `actionRecordId` and `botId`.
+
 ### Use from Claude Desktop / Cursor (MCP)
 
 ```json

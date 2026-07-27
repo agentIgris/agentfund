@@ -27,6 +27,12 @@ function num(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function bool(name: string, fallback = false): boolean {
+  const value = process.env[name];
+  if (value === undefined || value === "") return fallback;
+  return value === "true" || value === "1";
+}
+
 const cluster: SolanaCluster = resolveSolanaCluster(process.env);
 
 export const config = {
@@ -81,6 +87,17 @@ export const config = {
     webhookPath: str("HELIUS_WEBHOOK_PATH", "/indexer/helius-webhook"),
   },
 
+  svs: {
+    enforceX402: bool("SVS_X402_ENFORCE"),
+    serverUrl: str("SVS_SERVER_URL", "https://app.svsprotocol.com"),
+    relayerBotId: str("SVS_RELAYER_BOT_ID"),
+    apiKey: str("SVS_RELAYER_API_KEY"),
+    requestSigningSecret: str("SVS_RELAYER_REQUEST_SIGNING_SECRET"),
+    policyId: str("SVS_X402_POLICY_ID", "agentfund-x402-contribution-v1"),
+    approvalStaleAfterMs: num("SVS_X402_APPROVAL_STALE_AFTER_MS", 15 * 60 * 1000),
+    certificationStaleAfterMs: num("SVS_CERTIFICATION_STALE_AFTER_MS", 24 * 60 * 60 * 1000),
+  },
+
   pinata: {
     jwt: str("PINATA_JWT", ""),
   },
@@ -113,6 +130,14 @@ export function assertProductionConfig(): void {
   }
   if (!config.helius.webhookSecret) {
     errors.push("HELIUS_WEBHOOK_SECRET must be set in production (the indexer webhook is unauthenticated without it).");
+  }
+  if (config.svs.enforceX402) {
+    if (!config.svs.relayerBotId) errors.push("SVS_RELAYER_BOT_ID is required when SVS_X402_ENFORCE=true.");
+    if (!config.svs.apiKey) errors.push("SVS_RELAYER_API_KEY is required when SVS_X402_ENFORCE=true.");
+    if (!config.svs.requestSigningSecret) {
+      errors.push("SVS_RELAYER_REQUEST_SIGNING_SECRET is required when SVS_X402_ENFORCE=true.");
+    }
+    if (!config.svs.policyId) errors.push("SVS_X402_POLICY_ID is required when SVS_X402_ENFORCE=true.");
   }
 
   if (errors.length > 0) {

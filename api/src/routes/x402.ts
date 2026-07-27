@@ -26,6 +26,9 @@ import {
   getConnection,
 } from "../services/solana.js";
 import { x402DonateBodySchema, x402PaymentHeaderSchema, x402ProjectParamSchema } from "../schema/x402.js";
+import { emitContributionVerified } from "../services/contributionVerified.js";
+import type { SettlementAuthorizationProvider } from "../services/settlementAuthorization.js";
+import { createSvsSettlementAuthorizationProvider } from "../services/svsX402.js";
 
 // Compute-budget instructions (priority fees / CU limits) may legitimately
 // ride alongside the contribute instruction — same allowlist as tx.ts.
@@ -46,6 +49,8 @@ function allowedProgramIds(): Set<string> {
 // pubkey(32) + amount u64 LE(8) layout).
 const CONTRIBUTE_DISCRIMINATOR = anchorSighash("contribute");
 const CONTRIBUTE_FOR_DISCRIMINATOR = anchorSighash("contribute_for");
+const defaultSettlementAuthorizationProvider: SettlementAuthorizationProvider =
+  createSvsSettlementAuthorizationProvider({ settings: config.svs });
 
 /** `process.env.X402_NETWORK ?? "solana-localnet"` — read fresh each call so tests can toggle it. */
 function x402Network(): string {
@@ -110,7 +115,16 @@ async function confirmWithTimeout(conn: Connection, signature: string): Promise<
   }
 }
 
-export function registerX402Routes(app: FastifyInstance): void {
+export function registerX402Routes(
+  app: FastifyInstance,
+  {
+    authorizationProvider = defaultSettlementAuthorizationProvider,
+    emitVerifiedContribution = emitContributionVerified,
+  }: {
+    authorizationProvider?: SettlementAuthorizationProvider;
+    emitVerifiedContribution?: typeof emitContributionVerified;
+  } = {},
+): void {
   app.post("/x402/donate/:projectId", async (request, reply) => {
     const paramsParsed = x402ProjectParamSchema.safeParse(request.params);
     if (!paramsParsed.success) {
@@ -142,7 +156,11 @@ export function registerX402Routes(app: FastifyInstance): void {
     // ── STAGE 2 — verify the submitted payment ──────────────────────────
 
     // (a) header decodes to JSON matching the exact-scheme envelope.
-    let paymentPayload: { scheme: string; payload: { signedTx: string } };
+    let paymentPayload: {
+      scheme: string;
+      payload: { signedTx: string };
+      svs?: { actionRecordId: string; botId: string };
+    };
     try {
       const decoded = Buffer.from(paymentHeader, "base64").toString("utf8");
       const json: unknown = JSON.parse(decoded);
@@ -220,28 +238,49 @@ export function registerX402Routes(app: FastifyInstance): void {
       return reply.code(400).send({ error: "invalid_payment", message: "contribute instruction's escrow account does not match the derived PDA" });
     }
 
+    // (g) when enabled, AgentFund fails closed unless SVS authorizes this exact
+    // transaction, agent, intent, policy, simulation, fee, and wallet approval.
+    const agentWallet = tx.feePayer?.toBase58();
+    const action = contributeIx.data.subarray(0, 8).equals(CONTRIBUTE_DISCRIMINATOR)
+      ? "x402_contribute" as const
+      : "x402_contribute_for" as const;
+    let settlementAuthorization = null;
+
+    if (authorizationProvider.enabled) {
+      if (!paymentPayload.svs || !agentWallet) {
+        return reply.code(403).send({
+          error: "svs_authorization_required",
+          message: "SVS actionRecordId, botId, and a transaction fee payer are required before settlement.",
+        });
+      }
+
+      try {
+        settlementAuthorization = await authorizationProvider.requireAuthorization({
+          actionRecordId: paymentPayload.svs.actionRecordId,
+          botId: paymentPayload.svs.botId,
+          agentWallet,
+          action,
+          projectId: project.id,
+          amountMicroUsdc: decodedAmount.toString(),
+          escrowPda: escrowPda.toBase58(),
+          serializedTransaction: paymentPayload.payload.signedTx,
+        });
+      } catch (err) {
+        request.log.warn({ err, actionRecordId: paymentPayload.svs.actionRecordId }, "x402/donate: SVS authorization rejected");
+        return reply.code(403).send({
+          error: "svs_authorization_failed",
+          message: "SVS rejected this action. Do not broadcast until the action has current authorization for these exact transaction bytes.",
+          actionRecordId: paymentPayload.svs.actionRecordId,
+        });
+      }
+    }
+
     // ── Settlement — broadcast + confirm ────────────────────────────────
     const conn = getConnection();
+    let signature: string;
     try {
-      const signature = await conn.sendRawTransaction(raw, { skipPreflight: false });
+      signature = await conn.sendRawTransaction(raw, { skipPreflight: false });
       await confirmWithTimeout(conn, signature);
-
-      const responseHeader = Buffer.from(
-        JSON.stringify({
-          success: true,
-          transaction: signature,
-          network: x402Network(),
-          payer: tx.feePayer ? tx.feePayer.toBase58() : null,
-        }),
-      ).toString("base64");
-      reply.header("X-PAYMENT-RESPONSE", responseHeader);
-
-      return reply.send({
-        success: true,
-        signature,
-        projectId: project.id,
-        amount: String(decodedAmount),
-      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       request.log.error({ err }, "x402/donate: settlement failed");
@@ -252,5 +291,88 @@ export function registerX402Routes(app: FastifyInstance): void {
         accepts: [accepts],
       });
     }
+
+    const responseHeader = Buffer.from(
+      JSON.stringify({
+        success: true,
+        transaction: signature,
+        network: x402Network(),
+        payer: agentWallet ?? null,
+      }),
+    ).toString("base64");
+    reply.header("X-PAYMENT-RESPONSE", responseHeader);
+
+    if (authorizationProvider.enabled && paymentPayload.svs) {
+      try {
+        const evidence = await authorizationProvider.reportBroadcast({
+          actionRecordId: paymentPayload.svs.actionRecordId,
+          signature,
+        });
+        const authorizationHash = settlementAuthorization?.authorizationHash ?? null;
+
+        if (!authorizationHash) {
+          throw new Error("Settlement authorization provider did not return an authorization hash.");
+        }
+
+        try {
+          await emitVerifiedContribution({
+            projectId: project.id,
+            botId: paymentPayload.svs.botId,
+            actionRecordId: paymentPayload.svs.actionRecordId,
+            signature,
+            authorizationHash,
+          });
+        } catch (err) {
+          request.log.error({ err, signature, actionRecordId: paymentPayload.svs.actionRecordId }, "x402/donate: verified settlement event is pending");
+          return reply.code(202).send({
+            success: true,
+            signature,
+            projectId: project.id,
+            amount: String(decodedAmount),
+            svs: {
+              status: "verified_event_pending",
+              actionRecordId: paymentPayload.svs.actionRecordId,
+              authorizationHash,
+              evidence,
+              message: "Payment and SVS evidence are confirmed. Do not resubmit the payment; retry the internal contribution.verified event.",
+            },
+          });
+        }
+
+        return reply.send({
+          success: true,
+          signature,
+          projectId: project.id,
+          amount: String(decodedAmount),
+          svs: {
+            status: "verified",
+            actionRecordId: paymentPayload.svs.actionRecordId,
+            authorizationHash,
+            evidence,
+          },
+        });
+      } catch (err) {
+        request.log.error({ err, signature, actionRecordId: paymentPayload.svs.actionRecordId }, "x402/donate: settled but SVS evidence report is pending");
+        return reply.code(202).send({
+          success: true,
+          signature,
+          projectId: project.id,
+          amount: String(decodedAmount),
+          svs: {
+            status: "evidence_pending",
+            actionRecordId: paymentPayload.svs.actionRecordId,
+            authorizationHash: settlementAuthorization?.authorizationHash ?? null,
+            message: "Payment is confirmed. Do not resubmit it; retry only the idempotent SVS evidence report.",
+          },
+        });
+      }
+    }
+
+    return reply.send({
+      success: true,
+      signature,
+      projectId: project.id,
+      amount: String(decodedAmount),
+    });
   });
 }

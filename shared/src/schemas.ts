@@ -189,6 +189,17 @@ export const wsContributionMadeEventSchema = z.object({
   }),
 });
 
+export const wsContributionVerifiedEventSchema = z.object({
+  type: z.literal("contribution.verified"),
+  data: z.object({
+    projectId: base58PubkeySchema,
+    botId: z.string().min(1),
+    actionRecordId: z.string().min(1),
+    signature: z.string().min(1),
+    authorizationHash: z.string().regex(/^[a-f0-9]{64}$/i),
+  }),
+});
+
 export const wsMilestoneReleasedEventSchema = z.object({
   type: z.literal("milestone.released"),
   data: z.object({
@@ -220,6 +231,7 @@ export const wsServerEventSchema = z.discriminatedUnion("type", [
   wsAuthOkMessageSchema,
   wsProjectCreatedEventSchema,
   wsContributionMadeEventSchema,
+  wsContributionVerifiedEventSchema,
   wsMilestoneReleasedEventSchema,
   wsVoteCastEventSchema,
   wsGoalReachedEventSchema,
