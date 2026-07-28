@@ -251,6 +251,11 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Set every env var `deploy/.env.example` lists (repo-root `.env.example` and each workspace's `.env.example` cover the same variables for local reference). Prisma migrations apply automatically on `api` container boot — no separate migrate step needed.
 
+The `SVS_*` variables are the one exception: they configure the **optional** settlement authorization
+gate and should be left at `SVS_X402_ENFORCE=false` (the default). The remaining `SVS_*` values are only
+read when enforcement is on, so they can stay blank. Do not enable enforcement without first completing
+the gate prerequisites in [SECURITY.md](SECURITY.md#optional-settlement-authorization).
+
 To deploy an update, `git pull` on the host and re-run the `up -d --build` command (see [`deploy/README.md`](deploy/README.md) → "Update to latest main").
 
 ### 4.2 Vercel — `web` (dashboard) and `docs` (landing page)

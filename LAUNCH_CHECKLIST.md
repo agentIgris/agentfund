@@ -71,11 +71,43 @@ Draft files live in `E:\AIfundraising\launch-drafts\`. None of these have been s
 
 ---
 
-## (c) WATCH — already-opened PRs (real, live, awaiting review)
+## (c) WATCH — outreach PRs (status as of 2026-07-27)
 
-- https://github.com/punkpeye/awesome-mcp-servers/pull/9850 — "Add @agentfund/mcp to Finance & Fintech 🤖🤖🤖" (tagged for maintainers' automated-agent fast-track)
+**Merged ✅**
+
+- https://github.com/punkpeye/awesome-mcp-servers/pull/9850 — "Add @agentfund/mcp to Finance & Fintech" — **MERGED 2026-07-21**
+
+**Open, mergeable and clean — waiting on maintainer action only**
+
+- https://github.com/StockpileLabs/awesome-solana-oss/pull/63
+- https://github.com/sendaifun/awesome-solana-mcp-servers/pull/45
+
+**Open, blocked by each repo's required-review gate (not by our entry)**
+
+- https://github.com/solana-foundation/awesome-solana-ai/pull/196 — greptile bot feedback addressed
+- https://github.com/helius-labs/solana-awesome/pull/55
 - https://github.com/Merit-Systems/awesome-agentic-commerce/pull/439 — "Add AgentFund to Ecosystem" (repo formerly named awesome-x402)
+
+**Open, mergeability not yet recomputed by GitHub; no maintainer feedback**
+
+- https://github.com/xpaysh/awesome-x402/pull/809
 - https://github.com/x402-foundation/x402/pull/2835 — "Add AgentFund to ecosystem page" (filed against canonical upstream since coinbase/x402 is a read-only dev-fork mirror with issues disabled; ~5 business day review SLA stated by the repo). Once AgentFund is redeployed to mainnet, consider a follow-up PR recategorizing the ecosystem entry from "Infrastructure & Tooling" to "Services/Endpoints".
+
+No action is owed by us on any open item above.
+
+---
+
+## (d) Inbound integrations
+
+- **SVS Protocol settlement gate — PR #2 MERGED 2026-07-27** (`bb79c88`, squashed). Optional
+  `SettlementAuthorizationProvider` with SVS as the first provider; `SVS_X402_ENFORCE=false` in
+  production. Security-reviewed before merge; SDK pinned to an exact version. SVS shipped their
+  reciprocal side (`@svsprotocol/solana@0.6.0` with an `agentfund` adapter export, a registry
+  backlink, and machine-readable pilot status, all scoped as "integration pilot, not a verified
+  agent"). **Next:** joint devnet proof sequence, then co-published case study. Enforcement stays off
+  until both land plus a re-audit of the then-current SDK — see
+  [SECURITY.md](SECURITY.md#optional-settlement-authorization).
+  Tracking issue: https://github.com/agentIgris/AgentFund/issues/1
 
 ---
 
